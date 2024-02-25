@@ -1,0 +1,10 @@
+.env
+*_test.go
+Dockerfile
+.dockerignore
+.gcloudignore
+*.log
+*.xlsx
+*.png
+*.jpg
+*.env*
