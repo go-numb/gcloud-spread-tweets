@@ -37,7 +37,7 @@ func (p *Client) Regi(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "Error getting query for customer token"})
 	}
 
-	claims := Claims{}
+	claims := libs.Claims{}
 	if err := p.GetAnyFirestore(Users, customerToken, &claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting session, %v", err)})
 	}

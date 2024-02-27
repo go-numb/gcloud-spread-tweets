@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"go-api/libs"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
@@ -27,7 +28,7 @@ func (p *Client) Auth(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting request token, %v", err)})
 	}
 
-	claims := Claims{
+	claims := libs.Claims{
 		RequestToken:       requestToken,
 		RequestTokenSecret: requestTokenSecret,
 	}
@@ -42,7 +43,7 @@ func (p *Client) Auth(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: "Error getting authorization URL"})
 	}
 
-	var value Claims
+	var value libs.Claims
 	if err := p.GetAnyFirestore(Users, claims.RequestToken, &value); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting firestore, %v", err)})
 	}
@@ -60,7 +61,7 @@ func (p *Client) Callback(c echo.Context) error {
 	requestToken := c.QueryParam("oauth_token")
 	verifier := c.QueryParam("oauth_verifier")
 
-	var claims Claims
+	var claims libs.Claims
 	if err := p.GetAnyFirestore(Users, requestToken, &claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting firestore, %v", err)})
 	}
