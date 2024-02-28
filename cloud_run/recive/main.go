@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -18,6 +20,10 @@ const (
 	IS_PRODUCTION = true
 )
 
+var (
+	PORT string
+)
+
 func init() {
 	if IS_PRODUCTION {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
@@ -25,6 +31,14 @@ func init() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
+	// 環境別の処理
+	if runtime.GOOS == "linux" {
+		PORT = fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT"))
+		log.Debug().Msgf("Linuxでの処理, PORT: %s", PORT)
+	} else {
+		PORT = fmt.Sprintf("localhost:%s", os.Getenv("PORT"))
+		log.Debug().Msgf("その他のOSでの処理, PORT: %s", PORT)
+	}
 }
 
 func main() {
@@ -39,7 +53,7 @@ func main() {
 
 	api.Routers(e)
 
-	log.Fatal().Err(e.Start(":" + os.Getenv("PORT")))
+	log.Fatal().Err(e.Start(PORT))
 }
 
 // strUpsideDown文字伏せ

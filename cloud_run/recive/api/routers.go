@@ -59,8 +59,6 @@ type Response struct {
 func Routers(e *echo.Echo) {
 	client := New()
 
-	key := os.Getenv("SESSIONKEY")
-	log.Debug().Msgf("session key: %s", key)
 	e.Use(
 		middleware.CORS(),
 		// session.Middleware(sessions.NewCookieStore([]byte(key))),
@@ -68,7 +66,7 @@ func Routers(e *echo.Echo) {
 
 	apiRoutes := e.Group("/api")
 	// - GET /api/upload/: registor update spreadsheet
-	apiRoutes.GET("/spreadsheet/upload", client.Regi)
+	apiRoutes.GET("/spreadsheet/upload", client.Registor)
 	// Twitter/X callback
 	// for Twitter API AccessToken,Secret
 	apiRoutes.GET("/x/auth/request", client.Auth)

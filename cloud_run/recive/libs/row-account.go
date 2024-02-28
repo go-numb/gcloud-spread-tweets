@@ -16,31 +16,31 @@ const (
 type SubscribedPlan uint8
 
 type Account struct {
-	UUID        string         `csv:"uuid" dataframe:"uuid"`
-	ID          string         `csv:"x_id" dataframe:"x_id"`
-	Password    string         `csv:"x_password" dataframe:"x_password"`
-	SpreadID    string         `csv:"spread_id" dataframe:"spread_id"`
-	AccessToken string         `csv:"access_token" dataframe:"access_token"`
-	SecretToken string         `csv:"secret_token" dataframe:"secret_token"`
-	Subscribed  SubscribedPlan `csv:"subscribed" dataframe:"subscribed"`
-	Hours       string         `csv:"hours" dataframe:"hours"`
-	Minutes     string         `csv:"minutes" dataframe:"minutes"`
-	TermHours   int            `csv:"term_hours" dataframe:"term_hours"`
+	UUID         string         `csv:"uuid" dataframe:"uuid"`
+	ID           string         `csv:"x_id" dataframe:"x_id"`
+	Password     string         `csv:"x_password" dataframe:"x_password"`
+	SpreadID     string         `csv:"spread_id" dataframe:"spread_id"`
+	AccessToken  string         `csv:"access_token" dataframe:"access_token"`
+	AccessSecret string         `csv:"access_secret" dataframe:"access_secret"`
+	Subscribed   SubscribedPlan `csv:"subscribed" dataframe:"subscribed"`
+	Hours        string         `csv:"hours" dataframe:"hours"`
+	Minutes      string         `csv:"minutes" dataframe:"minutes"`
+	TermHours    int            `csv:"term_hours" dataframe:"term_hours"`
 }
 
 // NewAccountForFree 初回会員登録用
 func NewAccount(id, sheetID, accessToken, accessSecret string) *Account {
 	return &Account{
-		UUID:        uuid.New().String(),
-		ID:          id,
-		Password:    "",
-		SpreadID:    sheetID,
-		AccessToken: accessToken,
-		SecretToken: accessSecret,
-		Subscribed:  0,
-		Hours:       "",
-		Minutes:     "",
-		TermHours:   48,
+		UUID:         uuid.New().String(),
+		ID:           id,
+		Password:     "",
+		SpreadID:     sheetID,
+		AccessToken:  accessToken,
+		AccessSecret: accessSecret,
+		Subscribed:   0,
+		Hours:        "",
+		Minutes:      "",
+		TermHours:    48,
 	}
 }
 

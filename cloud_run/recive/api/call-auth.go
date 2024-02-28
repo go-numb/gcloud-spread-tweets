@@ -86,8 +86,8 @@ func (p *Client) Callback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
 	}
 
-	log.Debug().Msgf("end callback access token: %s, secret: %s\n", accessToken, accessSecret)
+	log.Debug().Msgf("end callback access token: %s, secret: %s", accessToken, accessSecret)
 
 	// ページ変異先にリダイレクト
-	return c.Redirect(http.StatusTemporaryRedirect, p.GUIURL)
+	return c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s?token=%s", p.GUIURL, requestToken))
 }

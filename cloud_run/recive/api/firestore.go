@@ -95,6 +95,7 @@ func (p *Client) SetAnyFirestore(colName, docKey string, data any) error {
 		// id, keyはTwitter/Xアカウントのidで生成
 		// 現状、アカウント分の重複は容認せず
 		for _, v := range value {
+			// Twitter/X IDをキーにして重複を許さない
 			if _, err := client.Collection(colName).Doc(v.ID).Set(ctx, v); err != nil {
 				log.Error().Err(err).Msgf("error setting document: data type %s", reflect.TypeOf(v).String())
 				continue
@@ -106,8 +107,8 @@ func (p *Client) SetAnyFirestore(colName, docKey string, data any) error {
 		// id, keyはuuidで生成
 		// 現状、投稿分の重複は容認、考慮せず
 		for _, v := range value {
-			v.ID = uuid.New().String()
-			if _, err := client.Collection(colName).Doc(v.ID).Set(ctx, v); err != nil {
+			v.UUID = uuid.New().String()
+			if _, err := client.Collection(colName).Doc(v.UUID).Set(ctx, v); err != nil {
 				log.Error().Err(err).Msgf("error setting document: data type %s", reflect.TypeOf(v).String())
 				continue
 			}
@@ -136,8 +137,12 @@ func (p *Client) CheckExistKeysFirestore(colName string, docKeys []string) error
 
 	for _, key := range docKeys {
 		if _, err := client.Collection(colName).Doc(key).Get(ctx); err != nil {
-			return fmt.Errorf("error already exist this key: %s, %v", key, err)
+			// log.Debug().Str("function", "CheckExistKeysFirestore").Msgf("key: %s is ok, not exist", key)
+			continue
 		}
+
+		// 一つでもアカウント重複があればエラー
+		return fmt.Errorf("error checking exist keys: %s", key)
 	}
 
 	return nil

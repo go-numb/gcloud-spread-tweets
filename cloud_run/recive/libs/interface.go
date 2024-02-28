@@ -19,3 +19,16 @@ func GetUniqueKeys[T any](data []T, extractor GetUniqueExtractor[T]) []string {
 
 	return list
 }
+
+// 配列の重複チェック
+func CheckDuplicate(str []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range str {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
+}

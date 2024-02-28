@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom';
 import BtnSign from '/public/assets/images/sign-in-with-twitter-gray.png'
 // import BtnSign from './assets/sign-in-with-twitter-gray.png'
 import './App.css'
@@ -7,6 +8,7 @@ import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
 function App() {
+  const location = useLocation();
   const [msg, setMsg] = useState("")
   const [result, setResult] = useState("")
   const [token, setToken] = useState("")
@@ -27,7 +29,9 @@ function App() {
     
     if (data.data != null && data.data != "") {
       console.log(data.code, data.message,  data.data.url)
-      setToken(data.data.token)
+      if (data.data.token != null && data.data.token != "") {
+        setToken(data.data.token)
+      }
       window.location.href = data.data.url
     }
   }
@@ -56,16 +60,31 @@ function App() {
     })
 
     const data = await result.json()
-    if (data.data != null && data.data != "") {
+    // エラーを表示する
+    if (!result.ok) {
+      setMsg("")
+      setResult(`<b>エラーが発生しました。もう一度お試しください。<br />${data.code}: ${data.message}</b>`)
+      return
+    } else if (data.data != null && data.data != "") {
       console.log(data.data);
       
-      setResult(data.data.name + "を登録しました。認証したTwitter/XアカウントとSpreadsheetで登録したUserIDが同一である必要があります。")
+      setMsg("")
+      setResult("<b>Twitter/X Account: [ " + data.data.name + " ] を登録しました。明日より、自動投稿を行います。認証したTwitter/Xアカウントと登録アカウントが一致していることを確認してください。</b>")
     }
   }
 
   const handler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMsg(e.target.value)
   }
+
+  // urlからtokenを取得
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const token = query.get('token');
+    if (token != null) {
+      setToken(token);
+    }
+  }, [location]);
 
   return (
     <>
@@ -119,12 +138,13 @@ function App() {
               <dd>認証したTwitter/Xアカウントと登録したSpreadsheet AccountIDを照合し、Twitter投稿を自動化します。認証したアカウントと登録するアカウントが同様のものであることを確認してください。</dd>
             </dl>
 
-            <div dangerouslySetInnerHTML={{ __html: result }}></div>
-
             <form onSubmit={(e) => registor(e)}>
               <input type="text" id="spreadsheet_id" name="spreadsheet_id" onChange={handler} placeholder="Spreadsheet ID" value={msg}></input>
               <input type="submit" value="登録" />
             </form>
+            <hr />
+            <div dangerouslySetInnerHTML={{ __html: result }}></div>
+
           </div>
         </TabPanel>
         <TabPanel>

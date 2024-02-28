@@ -75,13 +75,15 @@ func (p *Client) Registor(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking columns > %v", err)})
 	}
 
-	log.Printf("checked customers sheet, rows: %d, columns: %v\n", customerPostDf.Nrow(), customerPostDf.Names())
+	log.Printf("checked customers sheet, rows: %d, columns: %v", customerPostDf.Nrow(), customerPostDf.Names())
 
 	// マスターファイルのアカウントデータの読み込み
-	customerAccountKeys := libs.GetUniqueKeys(customerPosts, func(t libs.Post) string {
+	customerAccountIds := libs.GetUniqueKeys(customerPosts, func(t libs.Post) string {
 		return t.ID
 	})
-	if err := p.CheckExistKeysFirestore(Accounts, customerAccountKeys); err != nil {
+	// 重複チェック
+	customerAccountIds = libs.CheckDuplicate(customerAccountIds)
+	if err := p.CheckExistKeysFirestore(Accounts, customerAccountIds); err != nil {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking customer account keys > %v", err)})
 	}
 
@@ -109,7 +111,6 @@ func (p *Client) Registor(c echo.Context) error {
 	// SessionにXUIDをセット
 	claims.Name = customerPosts[0].ID
 	claims.SpreadsheetID = customerSpreadsheetID
-
 	if err := p.SetAnyFirestore(Users, claims.RequestToken, claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore > %v", err)})
 	}
