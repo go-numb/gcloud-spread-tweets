@@ -7,7 +7,7 @@ import (
 	"github.com/go-gota/gota/dataframe"
 )
 
-type Row struct {
+type Post struct {
 	UUID      string `csv:"uuid" dataframe:"uuid"`
 	ID        string `csv:"x_id" dataframe:"x_id"`
 	Text      string `csv:"x_text" dataframe:"x_text"`
@@ -21,6 +21,10 @@ type Row struct {
 	Count     int    `csv:"count" dataframe:"count"`
 	PostURL   string `csv:"post_url" dataframe:"post_url"`
 	LastDate  string `csv:"last_date" dataframe:"last_date"`
+}
+
+func (p Post) GetID() string {
+	return p.ID
 }
 
 // CheckDupID SpreadID, UserIDの重複を確認
@@ -41,7 +45,7 @@ func CheckDupID(id, spreadID string, accounts []Account) error {
 }
 
 func CheckColumns(df dataframe.DataFrame) error {
-	str := make([]Row, 1)
+	str := make([]Post, 1)
 	columns := dataframe.LoadStructs(str)
 	if columns.Err != nil {
 		return columns.Err

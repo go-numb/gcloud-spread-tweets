@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-gota/gota/dataframe"
 	spreads "github.com/go-numb/go-spread-utils"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -25,10 +24,10 @@ import (
 7. マスターファイルの投稿データを取得
 8. マスターファイルの投稿データ末尾へ追記し更新
 */
-func (p *Client) Regi(c echo.Context) error {
+func (p *Client) Registor(c echo.Context) error {
 	log.Debug().Msgf("call Registor")
 
-	// フォームからのPOSTを表記する
+	// フォームからのPOST[spread_id, token]を受け取る
 	customerSpreadsheetID := strings.TrimSpace(c.QueryParam("spreadsheet_id"))
 	customerToken := strings.TrimSpace(c.QueryParam("token"))
 	if customerSpreadsheetID == "" {
@@ -37,9 +36,11 @@ func (p *Client) Regi(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "Error getting query for customer token"})
 	}
 
+	// アクセストークンをキーにしてセッションを取得
+	// セッションが有効か確認
 	claims := libs.Claims{}
 	if err := p.GetAnyFirestore(Users, customerToken, &claims); err != nil {
-		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting session, %v", err)})
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting session or nothing token: %s in session, %v", customerToken, err)})
 	}
 
 	// アクセストークンの確認
@@ -50,7 +51,6 @@ func (p *Client) Regi(c echo.Context) error {
 	log.Debug().Msgf("customers post SpreadsheetID: %s, access token: %s, secret token: %s", customerSpreadsheetID, claims.AccessToken, claims.AccessSecret)
 
 	// Spreadsheet API Clientの初期化
-
 	client := spreads.New(
 		context.Background(),
 		p.CredentialFile,
@@ -64,79 +64,46 @@ func (p *Client) Regi(c echo.Context) error {
 	customerPosts := []libs.Post{}
 	customerPostDf, err := client.Read(&customerPosts)
 	if err != nil || len(customerPosts) == 0 {
-		log.Error().Err(err).Msg("Error reading customer tweets spreadsheet")
+		log.Debug().Err(err).Msg("Error reading customer tweets spreadsheet")
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: "Error reading customer tweets spreadsheet"})
 	}
 
 	// 顧客登録Spreadsheetのデータ型式を確認
 	// 顧客データのカラム名とカラム数が一致しているかを確認
 	if err := libs.CheckColumns(customerPostDf); err != nil {
-		log.Error().Err(err).Msg("Error checking columns")
+		log.Debug().Err(err).Msg("Error checking columns")
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking columns > %v", err)})
 	}
 
 	log.Printf("checked customers sheet, rows: %d, columns: %v\n", customerPostDf.Nrow(), customerPostDf.Names())
 
-	// マスターファイルのユーザーデータの読み込み
-	client.SetSpreadID(p.SpreadID).SetSheetName(p.SheetUserID)
-	masterCustomerAccounts := []libs.Account{}
-	masterCustomerAccountsDf, err := client.Read(&masterCustomerAccounts)
-	if err != nil {
-		log.Error().Err(err).Msg("Error reading master users spreadsheet")
-		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: "Error reading master users spreadsheet"})
+	// マスターファイルのアカウントデータの読み込み
+	customerAccountKeys := libs.GetUniqueKeys(customerPosts, func(t libs.Post) string {
+		return t.ID
+	})
+	if err := p.CheckExistKeysFirestore(Accounts, customerAccountKeys); err != nil {
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking customer account keys > %v", err)})
 	}
 
-	// 登録SpreadsheetID及びTwitter/Xアカウントの重複チェックがマスターファイルにすでに存在しないかチェック
-	if err := libs.CheckDupID(customerPosts[0].ID, customerSpreadsheetID, masterCustomerAccounts); err != nil {
-		log.Error().Err(err).Msg("Error checking duplicate id")
-		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking duplicate id > %v", err)})
-	}
-
-	//
-	// master x_postsのデータの読み込み
-	client.SetSpreadID(p.SpreadID).SetSheetName(p.SheetPostID)
-	masterPosts := []libs.Post{}
-	masterPostDf, err := client.Read(&masterPosts)
-	if err != nil || len(masterPosts) == 0 {
-		log.Error().Err(err).Msg("Error reading master tweets spreadsheet")
-		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: "Error reading customer tweets spreadsheet"})
-	}
-
-	// 顧客のPostsデータをマスターファイルposts末尾へ追記し更新
-	customerRecords := customerPostDf.Records()
-	// 1行目はカラム名のため、2行目からデータを取得
-	updateRecords := spreads.ConvertStringToInterface(customerRecords)[1:]
-	// master: x_postsの末尾に追記
-	rowN := libs.DfNrowToLastNrow(masterPostDf)
-	client.SetRangeKey(fmt.Sprintf("A%d:Z", rowN)) // 末尾に追記
-	if err := client.Update(updateRecords); err != nil {
-		log.Error().Err(err).Msg("Error updating master tweets spreadsheet")
-		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error updating master tweets spreadsheet > %v", err)})
+	// 顧客のPostsデータをマスターファイルへ追記
+	if err := p.SetAnyFirestore(Posts, "", customerPosts); err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting posts firestore > %v", err)})
 	}
 
 	// master: x_usersの末尾に追記
 	// Twitter/Xアカウントで認証し、そのアカウントを含むx_postsのデータを登録する
 	// そのため、認証アカウントとx_posts内のアカウントが一致している
-	new_account := []libs.Account{
-		*libs.NewAccount(
-			customerPosts[0].ID,
-			customerSpreadsheetID,
-			claims.AccessToken,
-			claims.AccessSecret).
-			// Default: Free Plan
-			SetSubscribed(libs.SubscribedFree).
-			SetTime([]int{17}, []int{0}).
-			SetTerm(48),
-	}
-	temp := dataframe.LoadStructs(new_account)
-	records := temp.Subset(0).Records()
-	updateRow := spreads.ConvertStringToInterface(records)[1]
-	client.SetSheetName(p.SheetUserID) // master: x_usersに追記
-	rowN = libs.DfNrowToLastNrow(masterCustomerAccountsDf)
-	client.SetRangeKey(fmt.Sprintf("A%d:Z%d", rowN, rowN)) // 末尾に追記
-	if err := client.UpdateRow(updateRow); err != nil {
-		log.Error().Err(err).Msg("Error updating master users spreadsheet")
-		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error updating master users spreadsheet > %v", err)})
+	account := libs.NewAccount(
+		customerPosts[0].ID,
+		customerSpreadsheetID,
+		claims.AccessToken,
+		claims.AccessSecret).
+		// Default: Free Plan
+		SetSubscribed(libs.SubscribedFree).
+		SetTime([]int{17}, []int{0}).
+		SetTerm(48)
+	if err := p.SetAnyFirestore(Accounts, account.ID, account); err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting account firestore > %v", err)})
 	}
 
 	// SessionにXUIDをセット

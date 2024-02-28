@@ -3,17 +3,21 @@ package api
 import (
 	"context"
 	"fmt"
+	"go-api/libs"
 	"os"
 	"reflect"
 
 	firebase "firebase.google.com/go"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/option"
 )
 
 const (
 	// firestore collection
-	Users = "users"
+	Users    = "users"
+	Accounts = "accounts"
+	Posts    = "posts"
 
 	// bind key for map
 	RTOKEN       = "request_token"
@@ -85,8 +89,55 @@ func (p *Client) SetAnyFirestore(colName, docKey string, data any) error {
 	}
 	defer client.Close()
 
-	if _, err := client.Collection(colName).Doc(docKey).Set(ctx, data); err != nil {
-		return fmt.Errorf("error setting document: %v, data type: %s", err, reflect.TypeOf(data).String())
+	switch value := data.(type) {
+	case []libs.Account:
+		// 顧客アカウントの登録
+		// id, keyはTwitter/Xアカウントのidで生成
+		// 現状、アカウント分の重複は容認せず
+		for _, v := range value {
+			if _, err := client.Collection(colName).Doc(v.ID).Set(ctx, v); err != nil {
+				log.Error().Err(err).Msgf("error setting document: data type %s", reflect.TypeOf(v).String())
+				continue
+			}
+		}
+
+	case []libs.Post:
+		// 顧客投稿データの登録
+		// id, keyはuuidで生成
+		// 現状、投稿分の重複は容認、考慮せず
+		for _, v := range value {
+			v.ID = uuid.New().String()
+			if _, err := client.Collection(colName).Doc(v.ID).Set(ctx, v); err != nil {
+				log.Error().Err(err).Msgf("error setting document: data type %s", reflect.TypeOf(v).String())
+				continue
+			}
+		}
+
+	default:
+		if _, err := client.Collection(colName).Doc(docKey).Set(ctx, value); err != nil {
+			return fmt.Errorf("error setting document: %v, data type: %s", err, reflect.TypeOf(data).String())
+		}
+	}
+
+	return nil
+}
+
+func (p *Client) CheckExistKeysFirestore(colName string, docKeys []string) error {
+	app, ctx, err := p.NewAppClient()
+	if err != nil {
+		return fmt.Errorf("error initializing app: %v", err)
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		return fmt.Errorf("error initializing firestore: %v", err)
+	}
+	defer client.Close()
+
+	for _, key := range docKeys {
+		if _, err := client.Collection(colName).Doc(key).Get(ctx); err != nil {
+			return fmt.Errorf("error already exist this key: %s, %v", key, err)
+		}
 	}
 
 	return nil

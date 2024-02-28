@@ -12,3 +12,8 @@ type Claims struct {
 
 	SpreadsheetID string `json:"spreadsheet_id"`
 }
+
+// GetID for interface
+func (p Claims) GetID() string {
+	return p.Name
+}
