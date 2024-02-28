@@ -23,8 +23,8 @@ type Account struct {
 	AccessToken  string         `csv:"access_token" dataframe:"access_token"`
 	AccessSecret string         `csv:"access_secret" dataframe:"access_secret"`
 	Subscribed   SubscribedPlan `csv:"subscribed" dataframe:"subscribed"`
-	Hours        string         `csv:"hours" dataframe:"hours"`
-	Minutes      string         `csv:"minutes" dataframe:"minutes"`
+	Hours        []int          `csv:"hours" dataframe:"hours"`
+	Minutes      []int          `csv:"minutes" dataframe:"minutes"`
 	TermHours    int            `csv:"term_hours" dataframe:"term_hours"`
 }
 
@@ -38,8 +38,8 @@ func NewAccount(id, sheetID, accessToken, accessSecret string) *Account {
 		AccessToken:  accessToken,
 		AccessSecret: accessSecret,
 		Subscribed:   0,
-		Hours:        "",
-		Minutes:      "",
+		Hours:        make([]int, 0),
+		Minutes:      make([]int, 0),
 		TermHours:    48,
 	}
 }
@@ -58,24 +58,17 @@ func (a *Account) SetSubscribed(level SubscribedPlan) *Account {
 // SetTime 投稿時間の設定
 func (a *Account) SetTime(hours, minutes []int) *Account {
 	if len(hours) != 0 {
-		a.Hours = intSliceToString(hours)
+		a.Hours = hours
 	}
 	if len(minutes) != 0 {
-		a.Minutes = intSliceToString(minutes)
+		a.Minutes = minutes
 	}
-
 	return a
 }
 
 // GetTime 投稿時間の取得
 func (a *Account) GetTime() (hours, minutes []int) {
-	if a.Hours != "" {
-		hours = stringsToIntSlice(a.Hours)
-	}
-	if a.Minutes != "" {
-		minutes = stringsToIntSlice(a.Minutes)
-	}
-	return
+	return a.Hours, a.Minutes
 }
 
 // SetTerm 再投稿間隔設定
