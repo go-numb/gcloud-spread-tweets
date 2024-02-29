@@ -1,4 +1,4 @@
-package libs
+package models
 
 // GetUniqueExtractor は一意なキーを取得する関数型
 type GetUniqueExtractor[T any] func(T) string

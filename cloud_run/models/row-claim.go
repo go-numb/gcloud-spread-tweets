@@ -1,4 +1,4 @@
-package libs
+package models
 
 type Claims struct {
 	Name string `json:"name"`
