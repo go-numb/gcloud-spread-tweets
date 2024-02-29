@@ -5,10 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
-
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
+	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
 	"golang.org/x/exp/rand"
 )
 
