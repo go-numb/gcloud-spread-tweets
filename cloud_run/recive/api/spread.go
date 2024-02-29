@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
+	"github.com/go-numb/gcloud-spread-tweets/models"
 
 	"github.com/go-gota/gota/dataframe"
 	spreads "github.com/go-numb/go-spread-utils"

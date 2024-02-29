@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
+	"github.com/go-numb/gcloud-spread-tweets/models"
 
 	"github.com/rs/zerolog/log"
 

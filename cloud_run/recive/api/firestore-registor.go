@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
+	"github.com/go-numb/gcloud-spread-tweets/models"
 
 	spreads "github.com/go-numb/go-spread-utils"
 	"github.com/labstack/echo/v4"

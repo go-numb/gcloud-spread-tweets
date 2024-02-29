@@ -7,7 +7,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
-	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
+	"github.com/go-numb/gcloud-spread-tweets/models"
 	"golang.org/x/exp/rand"
 )
 

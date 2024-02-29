@@ -6,7 +6,7 @@ import (
 	"os"
 	"reflect"
 
-	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
+	"github.com/go-numb/gcloud-spread-tweets/models"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/google/uuid"
