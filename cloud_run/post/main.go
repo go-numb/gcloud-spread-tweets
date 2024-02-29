@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"post/models"
 	"runtime"
 	"time"
+
+	"github.com/go-numb/go-spread-utils/cloud_run/post/models"
 
 	zerolog "github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
