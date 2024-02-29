@@ -1,4 +1,4 @@
-module github.com/go-numb/go-spread-utils/cloud_run/recive
+module github.com/go-numb/gcloud-spread-utils/cloud_run/recive
 
 go 1.22.0
 

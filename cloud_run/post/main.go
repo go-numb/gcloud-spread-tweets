@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/go-numb/go-spread-utils/cloud_run/post/models"
+	"github.com/go-numb/gcloud-spread-tweets/cloud_run/post/models"
 
 	zerolog "github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/go-numb/go-spread-utils/cloud_run/recive/libs"
+	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
