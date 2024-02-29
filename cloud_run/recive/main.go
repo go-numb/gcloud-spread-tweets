@@ -1,4 +1,4 @@
-package recive
+package main
 
 import (
 	"fmt"
