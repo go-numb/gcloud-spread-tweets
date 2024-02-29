@@ -8,3 +8,6 @@ Dockerfile
 *.png
 *.jpg
 *.env*
+
+go.work
+go.work.sum
