@@ -6,7 +6,7 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
+	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
 
 	firebase "firebase.google.com/go/v4"
 	"github.com/google/uuid"
@@ -91,7 +91,7 @@ func (p *Client) SetAnyFirestore(colName, docKey string, data any) error {
 	defer client.Close()
 
 	switch value := data.(type) {
-	case []libs.Account:
+	case []models.Account:
 		// 顧客アカウントの登録
 		// id, keyはTwitter/Xアカウントのidで生成
 		// 現状、アカウント分の重複は容認せず
@@ -103,7 +103,7 @@ func (p *Client) SetAnyFirestore(colName, docKey string, data any) error {
 			}
 		}
 
-	case []libs.Post:
+	case []models.Post:
 		// 顧客投稿データの登録
 		// id, keyはuuidで生成
 		// 現状、投稿分の重複は容認、考慮せず

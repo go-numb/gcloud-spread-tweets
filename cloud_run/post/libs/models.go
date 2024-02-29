@@ -1,4 +1,4 @@
-package models
+package libs
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
-	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
+	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
 	"golang.org/x/exp/rand"
 )
 
@@ -16,14 +16,14 @@ type Client struct {
 }
 
 type Account struct {
-	libs.Account
+	models.Account
 }
 
 type Post struct {
 	AccessToken  string
 	AccessSecret string
 
-	libs.Post
+	models.Post
 }
 
 func NewClient(ctx context.Context) *Client {

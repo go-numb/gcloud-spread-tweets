@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
+	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
 
 	"github.com/rs/zerolog/log"
 
@@ -29,7 +29,7 @@ func (p *Client) Auth(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting request token, %v", err)})
 	}
 
-	claims := libs.Claims{
+	claims := models.Claims{
 		RequestToken:       requestToken,
 		RequestTokenSecret: requestTokenSecret,
 	}
@@ -44,7 +44,7 @@ func (p *Client) Auth(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: "Error getting authorization URL"})
 	}
 
-	var value libs.Claims
+	var value models.Claims
 	if err := p.GetAnyFirestore(Users, claims.RequestToken, &value); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting firestore, %v", err)})
 	}
@@ -62,7 +62,7 @@ func (p *Client) Callback(c echo.Context) error {
 	requestToken := c.QueryParam("oauth_token")
 	verifier := c.QueryParam("oauth_verifier")
 
-	var claims libs.Claims
+	var claims models.Claims
 	if err := p.GetAnyFirestore(Users, requestToken, &claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting firestore, %v", err)})
 	}

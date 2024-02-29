@@ -2,6 +2,7 @@ go 1.22.0
 
 use (
 	./cloud_functions/resize // Resize image
+	./cloud_run/models // common models
 	./cloud_run/post // Post to twitter/X
 	./cloud_run/recive // API
 )

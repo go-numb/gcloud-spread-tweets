@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/go-numb/gcloud-spread-tweets/cloud_run/post/models"
+	"github.com/go-numb/gcloud-spread-tweets/cloud_run/post/libs"
 
 	zerolog "github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -68,12 +68,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Post(t time.Time) error {
-	if models.IsTimeToPost(t) {
+	if libs.IsTimeToPost(t) {
 		return fmt.Errorf("time switcher is off")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	c := models.NewClient(ctx)
+	c := libs.NewClient(ctx)
 	defer cancel()
 
 	// Read spreadsheet:sheet@users rows
@@ -85,7 +85,7 @@ func Post(t time.Time) error {
 
 	// Select accounts
 	// 条件に合うアカウントを選択
-	accounts, err = models.SelectAccount(accounts, t)
+	accounts, err = libs.SelectAccount(accounts, t)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func Post(t time.Time) error {
 
 		// Select posts
 		// ユーザーが指定条件に合う投稿を選択
-		post, err := models.SelectPost(posts)
+		post, err := libs.SelectPost(posts)
 		if err != nil {
 			return err
 		}

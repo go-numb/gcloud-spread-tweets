@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
+	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
 
 	spreads "github.com/go-numb/go-spread-utils"
 	"github.com/labstack/echo/v4"
@@ -39,7 +39,7 @@ func (p *Client) Registor(c echo.Context) error {
 
 	// アクセストークンをキーにしてセッションを取得
 	// セッションが有効か確認
-	claims := libs.Claims{}
+	claims := models.Claims{}
 	if err := p.GetAnyFirestore(Users, customerToken, &claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting session or nothing token: %s in session, %v", customerToken, err)})
 	}
@@ -62,7 +62,7 @@ func (p *Client) Registor(c echo.Context) error {
 		SetSpreadID(customerSpreadsheetID).
 		SetSheetName(p.SheetPostID).
 		SetRangeKey(p.RangeKey)
-	customerPosts := []libs.Post{}
+	customerPosts := []models.Post{}
 	customerPostDf, err := client.Read(&customerPosts)
 	if err != nil || len(customerPosts) == 0 {
 		log.Debug().Err(err).Msg("Error reading customer tweets spreadsheet")
@@ -71,7 +71,7 @@ func (p *Client) Registor(c echo.Context) error {
 
 	// 顧客登録Spreadsheetのデータ型式を確認
 	// 顧客データのカラム名とカラム数が一致しているかを確認
-	if err := libs.CheckColumns(customerPostDf); err != nil {
+	if err := models.CheckColumns(customerPostDf); err != nil {
 		log.Debug().Err(err).Msg("Error checking columns")
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking columns > %v", err)})
 	}
@@ -79,11 +79,11 @@ func (p *Client) Registor(c echo.Context) error {
 	log.Printf("checked customers sheet, rows: %d, columns: %v", customerPostDf.Nrow(), customerPostDf.Names())
 
 	// マスターファイルのアカウントデータの読み込み
-	customerAccountIds := libs.GetUniqueKeys(customerPosts, func(t libs.Post) string {
+	customerAccountIds := models.GetUniqueKeys(customerPosts, func(t models.Post) string {
 		return t.ID
 	})
 	// 重複チェック
-	customerAccountIds = libs.CheckDuplicate(customerAccountIds)
+	customerAccountIds = models.CheckDuplicate(customerAccountIds)
 	if err := p.CheckExistKeysFirestore(Accounts, customerAccountIds); err != nil {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking customer account keys > %v", err)})
 	}
@@ -96,13 +96,13 @@ func (p *Client) Registor(c echo.Context) error {
 	// master: x_usersの末尾に追記
 	// Twitter/Xアカウントで認証し、そのアカウントを含むx_postsのデータを登録する
 	// そのため、認証アカウントとx_posts内のアカウントが一致している
-	account := libs.NewAccount(
+	account := models.NewAccount(
 		customerPosts[0].ID,
 		customerSpreadsheetID,
 		claims.AccessToken,
 		claims.AccessSecret).
 		// Default: Free Plan
-		SetSubscribed(libs.SubscribedFree).
+		SetSubscribed(models.SubscribedFree).
 		SetTime([]int{17}, []int{0}).
 		SetTerm(48)
 	if err := p.SetAnyFirestore(Accounts, account.ID, account); err != nil {

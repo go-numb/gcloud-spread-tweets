@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/libs"
+	models "github.com/go-numb/gcloud-spread-tweets/cloud_run/models"
 
 	"github.com/go-gota/gota/dataframe"
 	spreads "github.com/go-numb/go-spread-utils"
@@ -38,7 +38,7 @@ func (p *Client) Regi(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "Error getting query for customer token"})
 	}
 
-	claims := libs.Claims{}
+	claims := models.Claims{}
 	if err := p.GetAnyFirestore(Users, customerToken, &claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting session, %v", err)})
 	}
@@ -62,7 +62,7 @@ func (p *Client) Regi(c echo.Context) error {
 		SetSpreadID(customerSpreadsheetID).
 		SetSheetName(p.SheetPostID).
 		SetRangeKey(p.RangeKey)
-	customerPosts := []libs.Post{}
+	customerPosts := []models.Post{}
 	customerPostDf, err := client.Read(&customerPosts)
 	if err != nil || len(customerPosts) == 0 {
 		log.Error().Err(err).Msg("Error reading customer tweets spreadsheet")
@@ -71,7 +71,7 @@ func (p *Client) Regi(c echo.Context) error {
 
 	// 顧客登録Spreadsheetのデータ型式を確認
 	// 顧客データのカラム名とカラム数が一致しているかを確認
-	if err := libs.CheckColumns(customerPostDf); err != nil {
+	if err := models.CheckColumns(customerPostDf); err != nil {
 		log.Error().Err(err).Msg("Error checking columns")
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking columns > %v", err)})
 	}
@@ -80,7 +80,7 @@ func (p *Client) Regi(c echo.Context) error {
 
 	// マスターファイルのユーザーデータの読み込み
 	client.SetSpreadID(p.SpreadID).SetSheetName(p.SheetUserID)
-	masterCustomerAccounts := []libs.Account{}
+	masterCustomerAccounts := []models.Account{}
 	masterCustomerAccountsDf, err := client.Read(&masterCustomerAccounts)
 	if err != nil {
 		log.Error().Err(err).Msg("Error reading master users spreadsheet")
@@ -88,7 +88,7 @@ func (p *Client) Regi(c echo.Context) error {
 	}
 
 	// 登録SpreadsheetID及びTwitter/Xアカウントの重複チェックがマスターファイルにすでに存在しないかチェック
-	if err := libs.CheckDupID(customerPosts[0].ID, customerSpreadsheetID, masterCustomerAccounts); err != nil {
+	if err := models.CheckDupID(customerPosts[0].ID, customerSpreadsheetID, masterCustomerAccounts); err != nil {
 		log.Error().Err(err).Msg("Error checking duplicate id")
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking duplicate id > %v", err)})
 	}
@@ -96,7 +96,7 @@ func (p *Client) Regi(c echo.Context) error {
 	//
 	// master x_postsのデータの読み込み
 	client.SetSpreadID(p.SpreadID).SetSheetName(p.SheetPostID)
-	masterPosts := []libs.Post{}
+	masterPosts := []models.Post{}
 	masterPostDf, err := client.Read(&masterPosts)
 	if err != nil || len(masterPosts) == 0 {
 		log.Error().Err(err).Msg("Error reading master tweets spreadsheet")
@@ -108,7 +108,7 @@ func (p *Client) Regi(c echo.Context) error {
 	// 1行目はカラム名のため、2行目からデータを取得
 	updateRecords := spreads.ConvertStringToInterface(customerRecords)[1:]
 	// master: x_postsの末尾に追記
-	rowN := libs.DfNrowToLastNrow(masterPostDf)
+	rowN := models.DfNrowToLastNrow(masterPostDf)
 	client.SetRangeKey(fmt.Sprintf("A%d:Z", rowN)) // 末尾に追記
 	if err := client.Update(updateRecords); err != nil {
 		log.Error().Err(err).Msg("Error updating master tweets spreadsheet")
@@ -118,14 +118,14 @@ func (p *Client) Regi(c echo.Context) error {
 	// master: x_usersの末尾に追記
 	// Twitter/Xアカウントで認証し、そのアカウントを含むx_postsのデータを登録する
 	// そのため、認証アカウントとx_posts内のアカウントが一致している
-	new_account := []libs.Account{
-		*libs.NewAccount(
+	new_account := []models.Account{
+		*models.NewAccount(
 			customerPosts[0].ID,
 			customerSpreadsheetID,
 			claims.AccessToken,
 			claims.AccessSecret).
 			// Default: Free Plan
-			SetSubscribed(libs.SubscribedFree).
+			SetSubscribed(models.SubscribedFree).
 			SetTime([]int{17}, []int{0}).
 			SetTerm(48),
 	}
@@ -133,7 +133,7 @@ func (p *Client) Regi(c echo.Context) error {
 	records := temp.Subset(0).Records()
 	updateRow := spreads.ConvertStringToInterface(records)[1]
 	client.SetSheetName(p.SheetUserID) // master: x_usersに追記
-	rowN = libs.DfNrowToLastNrow(masterCustomerAccountsDf)
+	rowN = models.DfNrowToLastNrow(masterCustomerAccountsDf)
 	client.SetRangeKey(fmt.Sprintf("A%d:Z%d", rowN, rowN)) // 末尾に追記
 	if err := client.UpdateRow(updateRow); err != nil {
 		log.Error().Err(err).Msg("Error updating master users spreadsheet")
