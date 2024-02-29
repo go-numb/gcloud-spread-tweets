@@ -3,14 +3,17 @@ package api
 import (
 	"context"
 	"fmt"
-	"go-api/libs"
 	"os"
 	"reflect"
 
-	firebase "firebase.google.com/go"
+	"github.com/go-numb/go-spread-utils/cloud_run/recive/libs"
+
+	firebase "firebase.google.com/go/v4"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/option"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 const (

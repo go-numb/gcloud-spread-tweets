@@ -3,33 +3,48 @@ package models
 import (
 	"context"
 	"log"
+	"os"
 
-	sp "github.com/go-numb/go-spread-utils"
+	"github.com/go-numb/go-spread-utils/cloud_run/recive/libs"
 
-	"google.golang.org/api/sheets/v4"
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go/v4"
+	"golang.org/x/exp/rand"
 )
 
 type Client struct {
-	Sheets *sp.Client
+	Firestore *firestore.Client
 }
 
 type Account struct {
+	libs.Account
 }
 
 type Post struct {
-	AccessToken       string
-	AccessTokenSecret string
+	AccessToken  string
+	AccessSecret string
+
+	libs.Post
 }
 
 func NewClient(ctx context.Context) *Client {
-	serv, err := sheets.NewService(ctx)
+	config := &firebase.Config{ProjectID: os.Getenv("PROJECTID")}
+	fire, err := firebase.NewApp(ctx, config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	api, err := fire.Firestore(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return &Client{
-		Sheets: &sp.Client{
-			Sheets: serv,
-		},
+		Firestore: api,
 	}
+}
+
+// one 配列からランダムで一つ選択する
+func one(l int) int {
+	return rand.Intn(l)
 }

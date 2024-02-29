@@ -13,7 +13,7 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"go-api/api"
+	"github.com/go-numb/go-spread-utils/cloud_run/recive/api"
 )
 
 const (

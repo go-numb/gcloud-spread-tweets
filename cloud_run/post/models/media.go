@@ -15,7 +15,7 @@ import (
 func (p *Post) UploadMedias(filenames ...string) ([]string, error) {
 	api := anaconda.NewTwitterApiWithCredentials(
 		p.AccessToken,
-		p.AccessTokenSecret,
+		p.AccessSecret,
 		os.Getenv("CUNSUMERKEY"),
 		os.Getenv("CUNSUMERSECRET"),
 	)

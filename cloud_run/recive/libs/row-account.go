@@ -16,16 +16,16 @@ const (
 type SubscribedPlan uint8
 
 type Account struct {
-	UUID         string         `csv:"uuid" dataframe:"uuid"`
-	ID           string         `csv:"x_id" dataframe:"x_id"`
-	Password     string         `csv:"x_password" dataframe:"x_password"`
-	SpreadID     string         `csv:"spread_id" dataframe:"spread_id"`
-	AccessToken  string         `csv:"access_token" dataframe:"access_token"`
-	AccessSecret string         `csv:"access_secret" dataframe:"access_secret"`
-	Subscribed   SubscribedPlan `csv:"subscribed" dataframe:"subscribed"`
-	Hours        []int          `csv:"hours" dataframe:"hours"`
-	Minutes      []int          `csv:"minutes" dataframe:"minutes"`
-	TermHours    int            `csv:"term_hours" dataframe:"term_hours"`
+	UUID         string         `csv:"uuid" dataframe:"uuid" json:"uuid,omitempty"`
+	ID           string         `csv:"x_id" dataframe:"x_id" json:"id,omitempty"`
+	Password     string         `csv:"x_password" dataframe:"x_password" json:"password,omitempty"`
+	SpreadID     string         `csv:"spread_id" dataframe:"spread_id" json:"spread_id,omitempty"`
+	AccessToken  string         `csv:"access_token" dataframe:"access_token" json:"access_token,omitempty"`
+	AccessSecret string         `csv:"access_secret" dataframe:"access_secret" json:"access_secret,omitempty"`
+	Subscribed   SubscribedPlan `csv:"subscribed" dataframe:"subscribed" json:"subscribed,omitempty"`
+	Hours        []int          `csv:"hours" dataframe:"hours" json:"hours,omitempty"`
+	Minutes      []int          `csv:"minutes" dataframe:"minutes" json:"minutes,omitempty"`
+	TermHours    int            `csv:"term_hours" dataframe:"term_hours" json:"term_hours,omitempty"`
 }
 
 // NewAccountForFree 初回会員登録用

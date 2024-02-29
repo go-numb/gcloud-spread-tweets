@@ -8,19 +8,19 @@ import (
 )
 
 type Post struct {
-	UUID      string `csv:"uuid" dataframe:"uuid"`
-	ID        string `csv:"x_id" dataframe:"x_id"`
-	Text      string `csv:"x_text" dataframe:"x_text"`
-	File1     string `csv:"x_file1" dataframe:"x_file1"`
-	File2     string `csv:"x_file2" dataframe:"x_file2"`
-	File3     string `csv:"x_file3" dataframe:"x_file3"`
-	File4     string `csv:"x_file4" dataframe:"x_file4"`
-	WithFiles int    `csv:"with_files" dataframe:"with_files"`
-	Checked   int    `csv:"checked" dataframe:"checked"`
-	Priority  int    `csv:"priority" dataframe:"priority"`
-	Count     int    `csv:"count" dataframe:"count"`
-	PostURL   string `csv:"post_url" dataframe:"post_url"`
-	LastDate  string `csv:"last_date" dataframe:"last_date"`
+	UUID      string `csv:"uuid" dataframe:"uuid" json:"uuid,omitempty"`
+	ID        string `csv:"x_id" dataframe:"x_id" json:"id,omitempty"`
+	Text      string `csv:"x_text" dataframe:"x_text" json:"text,omitempty"`
+	File1     string `csv:"x_file1" dataframe:"x_file1" json:"file_1,omitempty"`
+	File2     string `csv:"x_file2" dataframe:"x_file2" json:"file_2,omitempty"`
+	File3     string `csv:"x_file3" dataframe:"x_file3" json:"file_3,omitempty"`
+	File4     string `csv:"x_file4" dataframe:"x_file4" json:"file_4,omitempty"`
+	WithFiles int    `csv:"with_files" dataframe:"with_files" json:"with_files,omitempty"`
+	Checked   int    `csv:"checked" dataframe:"checked" json:"checked,omitempty"`
+	Priority  int    `csv:"priority" dataframe:"priority" json:"priority,omitempty"`
+	Count     int    `csv:"count" dataframe:"count" json:"count,omitempty"`
+	PostURL   string `csv:"post_url" dataframe:"post_url" json:"post_url,omitempty"`
+	LastDate  string `csv:"last_date" dataframe:"last_date" json:"last_date,omitempty"`
 }
 
 func (p Post) GetID() string {

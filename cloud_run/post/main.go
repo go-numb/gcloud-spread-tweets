@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"post/models"
+	"runtime"
 	"time"
 
 	zerolog "github.com/rs/zerolog"
@@ -17,11 +19,24 @@ const (
 	IS_PRODUCTION = false
 )
 
+var (
+	PORT string
+)
+
 func init() {
 	if IS_PRODUCTION {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	// 環境別の処理
+	if runtime.GOOS == "linux" {
+		PORT = fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT"))
+		log.Debug().Msgf("Linuxでの処理, PORT: %s", PORT)
+	} else {
+		PORT = fmt.Sprintf("localhost:%s", os.Getenv("PORT"))
+		log.Debug().Msgf("その他のOSでの処理, PORT: %s", PORT)
 	}
 
 	// Twitter env for Twitter client@gotwi
@@ -30,11 +45,25 @@ func init() {
 }
 
 func main() {
+	http.HandleFunc("/post", handler)
+
+	// Start HTTP server.
+	log.Debug().Msgf("listening on port %s", PORT)
+	log.Fatal().Err(http.ListenAndServe(PORT, nil)).Msg("http server error")
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	// get query
+
+	// get time
 	t := time.Now()
 	if err := Post(t); err != nil {
 		log.Err(err).Str("function", "Post").TimeDiff("elapstime", time.Now(), t).Msg("post error")
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
 
 func Post(t time.Time) error {
@@ -48,15 +77,14 @@ func Post(t time.Time) error {
 
 	// Read spreadsheet:sheet@users rows
 	// 管理者のスプレッドシート:usersを読み込む
-	var accounts []models.Account
-	accountsDf, err := c.GetAccounts(&accounts)
+	accounts, err := c.GetAccounts(t.Hour())
 	if err != nil {
 		return err
 	}
 
 	// Select accounts
 	// 条件に合うアカウントを選択
-	accounts, err = models.SelectAccounts(accounts, "all")
+	accounts, err = models.SelectAccount(accounts, t)
 	if err != nil {
 		return err
 	}
@@ -65,7 +93,7 @@ func Post(t time.Time) error {
 	for i := 0; i < len(accounts); i++ {
 		// Get account spreadsheet:sheet@posts
 		// 各ユーザーのスプレッドシート:postsを取得
-		posts, err := c.GetPosts(accounts[i])
+		posts, err := c.GetPosts()
 		if err != nil {
 			return err
 		}
@@ -86,10 +114,6 @@ func Post(t time.Time) error {
 		// Update spreadsheet:sheet@posts
 
 	}
-
-	var (
-		_ = accountsDf
-	)
 
 	return nil
 }
