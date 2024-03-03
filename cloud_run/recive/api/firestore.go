@@ -109,6 +109,8 @@ func (p *Client) SetAnyFirestore(colName, docKey string, data any) error {
 		// 現状、投稿分の重複は容認、考慮せず
 		for _, v := range value {
 			v.UUID = uuid.New().String()
+			v.SetCreateAt()
+
 			if _, err := client.Collection(colName).Doc(v.UUID).Set(ctx, v); err != nil {
 				log.Error().Err(err).Msgf("error setting document: data type %s", reflect.TypeOf(v).String())
 				continue
@@ -147,4 +149,10 @@ func (p *Client) CheckExistKeysFirestore(colName string, docKeys []string) error
 	}
 
 	return nil
+}
+
+func SetCreatedAt(posts []models.Post) {
+	for i := range posts {
+		posts[i].SetCreateAt()
+	}
 }
