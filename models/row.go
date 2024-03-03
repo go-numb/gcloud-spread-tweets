@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/go-gota/gota/dataframe"
 )
@@ -20,11 +21,36 @@ type Post struct {
 	Priority  int    `csv:"priority" dataframe:"priority" json:"priority,omitempty"`
 	Count     int    `csv:"count" dataframe:"count" json:"count,omitempty"`
 	PostURL   string `csv:"post_url" dataframe:"post_url" json:"post_url,omitempty"`
-	LastDate  string `csv:"last_date" dataframe:"last_date" json:"last_date,omitempty"`
+
+	// 以下は、csv, dataframeには含まれない
+	LastPostedAt time.Time `csv:"-" dataframe:"-" json:"-,omitempty"`
+	CreatedAt    time.Time `csv:"-" dataframe:"-" json:"created_at,omitempty"`
 }
 
 func (p Post) GetID() string {
 	return p.ID
+}
+
+func (p *Post) SetLastPostedAt() bool {
+	if p.LastPostedAt.IsZero() {
+		p.LastPostedAt = time.Now()
+		return true
+	}
+	return false
+}
+
+// IsLastPostedAt LastPostedAtの時間を比較
+// More than the specified time has elapsed.
+func (p *Post) IsPastLastPostedAt(minutes int) bool {
+	return p.LastPostedAt.Before(time.Now().Add(-time.Duration(minutes) * time.Minute))
+}
+
+func (p *Post) SetCreateAt() bool {
+	if p.CreatedAt.IsZero() {
+		p.CreatedAt = time.Now()
+		return true
+	}
+	return false
 }
 
 // CheckDupID SpreadID, UserIDの重複を確認
