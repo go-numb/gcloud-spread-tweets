@@ -3,15 +3,11 @@ package models
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/go-gota/gota/dataframe"
 )
-
-type PostData struct {
-	*Account
-	*Post
-}
 
 type Post struct {
 	UUID      string `csv:"uuid" dataframe:"uuid" json:"uuid,omitempty"`
@@ -56,6 +52,16 @@ func (p *Post) SetCreateAt() bool {
 		return true
 	}
 	return false
+}
+
+// ToURLValues PostID, AccountIDをURLValuesに変換
+// この値を使って、Firestore[Accounts,Posts]からデータを取得する
+func (p *Post) ToURLValues() url.Values {
+	v := url.Values{}
+	v.Set("account_id", p.ID)
+	v.Set("post_id", p.UUID)
+	return v
+
 }
 
 // CheckDupID SpreadID, UserIDの重複を確認
