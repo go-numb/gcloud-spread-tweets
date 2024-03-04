@@ -101,10 +101,10 @@ func (p *ClientForFirestore) Set(ctx context.Context, colName, docKey string, da
 	return nil
 }
 
-func (p *ClientForFirestore) IsExist(ctx context.Context, colName string, docKeys []string) error {
+func (p *ClientForFirestore) IsExist(ctx context.Context, colName string, docKeys ...string) (isExistKeys []string, err error) {
 	client, err := p.NewClient(ctx)
 	if err != nil {
-		return fmt.Errorf("error initializing firestore: %v", err)
+		return nil, fmt.Errorf("error initializing firestore: %v", err)
 	}
 	defer client.Close()
 
@@ -114,9 +114,9 @@ func (p *ClientForFirestore) IsExist(ctx context.Context, colName string, docKey
 			continue
 		}
 
-		// 一つでもアカウント重複があればエラー
-		return fmt.Errorf("error checking exist keys: %s", key)
+		// すでに存在するkeyを返却
+		isExistKeys = append(isExistKeys, key)
 	}
 
-	return nil
+	return isExistKeys, nil
 }
