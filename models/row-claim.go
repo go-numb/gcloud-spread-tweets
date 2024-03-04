@@ -1,7 +1,7 @@
 package models
 
 type Claims struct {
-	Name string `firestore:"name" json:"name,omitempty"`
+	ID string `firestore:"id" json:"id,omitempty"`
 
 	AccessToken  string `firestore:"access_token" json:"access_token,omitempty"`
 	AccessSecret string `firestore:"access_secret" json:"access_secret,omitempty"`
@@ -15,5 +15,5 @@ type Claims struct {
 
 // GetID for interface
 func (p Claims) GetID() string {
-	return p.Name
+	return p.ID
 }

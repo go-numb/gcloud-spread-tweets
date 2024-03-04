@@ -14,8 +14,8 @@ type SubscribedPlan uint8
 
 type Account struct {
 	UUID         string         `csv:"uuid" dataframe:"uuid" firestore:"uuid,omitempty" json:"uuid,omitempty"`
-	ID           string         `csv:"x_id" dataframe:"x_id" firestore:"id,omitempty" json:"id,omitempty"`
-	Password     string         `csv:"x_password" dataframe:"x_password" firestore:"password,omitempty" json:"password,omitempty"`
+	ID           string         `csv:"id" dataframe:"id" firestore:"id,omitempty" json:"id,omitempty"`
+	Password     string         `csv:"password" dataframe:"password" firestore:"password,omitempty" json:"password,omitempty"`
 	SpreadID     string         `csv:"spread_id" dataframe:"spread_id" firestore:"spread_id,omitempty" json:"spread_id,omitempty"`
 	AccessToken  string         `csv:"access_token" dataframe:"access_token" firestore:"access_token,omitempty" json:"access_token,omitempty"`
 	AccessSecret string         `csv:"access_secret" dataframe:"access_secret" firestore:"access_secret,omitempty" json:"access_secret,omitempty"`

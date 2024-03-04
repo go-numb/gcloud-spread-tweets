@@ -10,13 +10,14 @@ import (
 )
 
 type Post struct {
-	UUID      string `csv:"uuid" dataframe:"uuid" firestore:"uuid,omitempty" json:"uuid,omitempty"`
-	ID        string `csv:"x_id" dataframe:"x_id" firestore:"id,omitempty" json:"id,omitempty"`
-	Text      string `csv:"x_text" dataframe:"x_text" firestore:"text,omitempty" json:"text,omitempty"`
-	File1     string `csv:"x_file1" dataframe:"x_file1" firestore:"file_1,omitempty" json:"file_1,omitempty"`
-	File2     string `csv:"x_file2" dataframe:"x_file2" firestore:"file_2,omitempty" json:"file_2,omitempty"`
-	File3     string `csv:"x_file3" dataframe:"x_file3" firestore:"file_3,omitempty" json:"file_3,omitempty"`
-	File4     string `csv:"x_file4" dataframe:"x_file4" firestore:"file_4,omitempty" json:"file_4,omitempty"`
+	UUID string `csv:"uuid" dataframe:"uuid" firestore:"uuid,omitempty" json:"uuid,omitempty"`
+	// ID is Twitter/X AccountID
+	ID        string `csv:"id" dataframe:"id" firestore:"id,omitempty" json:"id,omitempty"`
+	Text      string `csv:"text" dataframe:"text" firestore:"text,omitempty" json:"text,omitempty"`
+	File1     string `csv:"file1" dataframe:"file1" firestore:"file_1,omitempty" json:"file_1,omitempty"`
+	File2     string `csv:"file2" dataframe:"file2" firestore:"file_2,omitempty" json:"file_2,omitempty"`
+	File3     string `csv:"file3" dataframe:"file3" firestore:"file_3,omitempty" json:"file_3,omitempty"`
+	File4     string `csv:"file4" dataframe:"file4" firestore:"file_4,omitempty" json:"file_4,omitempty"`
 	WithFiles int    `csv:"with_files" dataframe:"with_files" firestore:"with_files,omitempty" json:"with_files,omitempty"`
 	Checked   int    `csv:"checked" dataframe:"checked" firestore:"checked,omitempty" json:"checked,omitempty"`
 	Priority  int    `csv:"priority" dataframe:"priority" firestore:"priority,omitempty" json:"priority,omitempty"`
