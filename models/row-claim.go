@@ -1,16 +1,16 @@
 package models
 
 type Claims struct {
-	Name string `json:"name"`
+	Name string `firestore:"name" json:"name,omitempty"`
 
-	AccessToken  string `json:"access_token"`
-	AccessSecret string `json:"access_secret"`
+	AccessToken  string `firestore:"access_token" json:"access_token,omitempty"`
+	AccessSecret string `firestore:"access_secret" json:"access_secret,omitempty"`
 
 	// Auth Request Token
-	RequestToken       string `json:"request_token"`
-	RequestTokenSecret string `json:"request_token_secret"`
+	RequestToken       string `firestore:"request_token" json:"request_token,omitempty"`
+	RequestTokenSecret string `firestore:"request_token_secret" json:"request_token_secret,omitempty"`
 
-	SpreadsheetID string `json:"spreadsheet_id"`
+	SpreadsheetID string `firestore:"spreadsheet_id" json:"spreadsheet_id,omitempty"`
 }
 
 // GetID for interface

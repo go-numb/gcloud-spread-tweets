@@ -10,23 +10,23 @@ import (
 )
 
 type Post struct {
-	UUID      string `csv:"uuid" dataframe:"uuid" json:"uuid,omitempty"`
-	ID        string `csv:"x_id" dataframe:"x_id" json:"id,omitempty"`
-	Text      string `csv:"x_text" dataframe:"x_text" json:"text,omitempty"`
-	File1     string `csv:"x_file1" dataframe:"x_file1" json:"file_1,omitempty"`
-	File2     string `csv:"x_file2" dataframe:"x_file2" json:"file_2,omitempty"`
-	File3     string `csv:"x_file3" dataframe:"x_file3" json:"file_3,omitempty"`
-	File4     string `csv:"x_file4" dataframe:"x_file4" json:"file_4,omitempty"`
-	WithFiles int    `csv:"with_files" dataframe:"with_files" json:"with_files,omitempty"`
-	Checked   int    `csv:"checked" dataframe:"checked" json:"checked,omitempty"`
-	Priority  int    `csv:"priority" dataframe:"priority" json:"priority,omitempty"`
-	Count     int    `csv:"count" dataframe:"count" json:"count,omitempty"`
-	PostURL   string `csv:"post_url" dataframe:"post_url" json:"post_url,omitempty"`
+	UUID      string `csv:"uuid" dataframe:"uuid" firestore:"uuid,omitempty" json:"uuid,omitempty"`
+	ID        string `csv:"x_id" dataframe:"x_id" firestore:"id,omitempty" json:"id,omitempty"`
+	Text      string `csv:"x_text" dataframe:"x_text" firestore:"text,omitempty" json:"text,omitempty"`
+	File1     string `csv:"x_file1" dataframe:"x_file1" firestore:"file_1,omitempty" json:"file_1,omitempty"`
+	File2     string `csv:"x_file2" dataframe:"x_file2" firestore:"file_2,omitempty" json:"file_2,omitempty"`
+	File3     string `csv:"x_file3" dataframe:"x_file3" firestore:"file_3,omitempty" json:"file_3,omitempty"`
+	File4     string `csv:"x_file4" dataframe:"x_file4" firestore:"file_4,omitempty" json:"file_4,omitempty"`
+	WithFiles int    `csv:"with_files" dataframe:"with_files" firestore:"with_files,omitempty" json:"with_files,omitempty"`
+	Checked   int    `csv:"checked" dataframe:"checked" firestore:"checked,omitempty" json:"checked,omitempty"`
+	Priority  int    `csv:"priority" dataframe:"priority" firestore:"priority,omitempty" json:"priority,omitempty"`
+	Count     int    `csv:"count" dataframe:"count" firestore:"count,omitempty" json:"count,omitempty"`
+	PostURL   string `csv:"post_url" dataframe:"post_url" firestore:"post_url,omitempty" json:"post_url,omitempty"`
 
 	// 以下は、csv, dataframeには含まれない
-	IsDelete     bool      `csv:"-" dataframe:"-" json:"is_delete,omitempty"`
-	LastPostedAt time.Time `csv:"-" dataframe:"-" json:"-"`
-	CreatedAt    time.Time `csv:"-" dataframe:"-" json:"created_at,omitempty"`
+	IsDelete     bool      `csv:"-" dataframe:"-" firestore:"is_delete,omitempty" json:"-,omitempty"`
+	LastPostedAt time.Time `csv:"-" dataframe:"-" firestore:"last_posted_at,omitempty" json:"last_posted_at,omitempty"`
+	CreatedAt    time.Time `csv:"-" dataframe:"-" firestore:"created_at,omitempty" json:"created_at,omitempty"`
 }
 
 func (p Post) GetID() string {
