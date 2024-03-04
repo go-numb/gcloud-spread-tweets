@@ -24,7 +24,7 @@ type Post struct {
 	PostURL   string `csv:"post_url" dataframe:"post_url" json:"post_url,omitempty"`
 
 	// 以下は、csv, dataframeには含まれない
-	IsDelete     bool      `csv:"-" dataframe:"-" json:"-"`
+	IsDelete     bool      `csv:"-" dataframe:"-" json:"is_delete,omitempty"`
 	LastPostedAt time.Time `csv:"-" dataframe:"-" json:"-"`
 	CreatedAt    time.Time `csv:"-" dataframe:"-" json:"created_at,omitempty"`
 }
