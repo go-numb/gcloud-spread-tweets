@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -29,11 +30,12 @@ func (p *Client) Auth(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting request token, %v", err)})
 	}
 
+	ctx := context.Background()
 	claims := models.Claims{
 		RequestToken:       requestToken,
 		RequestTokenSecret: requestTokenSecret,
 	}
-	if err := p.SetAnyFirestore(Users, claims.RequestToken, claims); err != nil {
+	if err := p.Firestore.Set(ctx, Users, claims.RequestToken, claims); err != nil {
 		log.Debug().Msgf("error setting firestore, %v", err)
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
 	}
@@ -45,7 +47,7 @@ func (p *Client) Auth(c echo.Context) error {
 	}
 
 	var value models.Claims
-	if err := p.GetAnyFirestore(Users, claims.RequestToken, &value); err != nil {
+	if err := p.Firestore.Get(ctx, Users, claims.RequestToken, &value); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting firestore, %v", err)})
 	}
 
@@ -62,8 +64,11 @@ func (p *Client) Callback(c echo.Context) error {
 	requestToken := c.QueryParam("oauth_token")
 	verifier := c.QueryParam("oauth_verifier")
 
-	var claims models.Claims
-	if err := p.GetAnyFirestore(Users, requestToken, &claims); err != nil {
+	var (
+		ctx    = context.Background()
+		claims models.Claims
+	)
+	if err := p.Firestore.Get(ctx, Users, requestToken, &claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting firestore, %v", err)})
 	}
 
@@ -83,7 +88,7 @@ func (p *Client) Callback(c echo.Context) error {
 
 	claims.AccessToken = accessToken
 	claims.AccessSecret = accessSecret
-	if err := p.SetAnyFirestore(Users, claims.RequestToken, claims); err != nil {
+	if err := p.Firestore.Set(ctx, Users, claims.RequestToken, claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
 	}
 

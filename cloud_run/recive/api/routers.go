@@ -8,6 +8,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/go-numb/gcloud-spread-tweets/models"
 )
 
 type Client struct {
@@ -25,6 +27,8 @@ type Client struct {
 	SheetUserID string
 	SheetPostID string
 	RangeKey    string
+
+	Firestore *models.ClientForFirestore
 }
 
 func New() *Client {
@@ -33,20 +37,27 @@ func New() *Client {
 		log.Fatal().Err(err).Msg("Error getting working directory")
 	}
 
+	projectID := os.Getenv("PROJECTID")
+	filename := filepath.Join(root, os.Getenv("CREDENTIALS"))
 	return &Client{
-		ProjectID: os.Getenv("PROJECTID"),
+		ProjectID: projectID,
 		GUIURL:    os.Getenv("GUIURL"),
 
 		Key:         os.Getenv("KEY"),
 		Secret:      os.Getenv("SECRET"),
 		CallbackURL: os.Getenv("CALLBACK"),
 
-		CredentialFile: filepath.Join(root, os.Getenv("CREDENTIALS")),
+		CredentialFile: filename,
 
 		SpreadID:    os.Getenv("SPREADID"),
 		SheetUserID: os.Getenv("SHEETUSER"),
 		SheetPostID: os.Getenv("SHEETPOST"),
 		RangeKey:    os.Getenv("RANGEKEY"),
+
+		Firestore: &models.ClientForFirestore{
+			ProjectID:      projectID,
+			CredentialFile: filename,
+		},
 	}
 }
 
@@ -64,11 +75,49 @@ func Routers(e *echo.Echo) {
 		// session.Middleware(sessions.NewCookieStore([]byte(key))),
 	)
 
-	apiRoutes := e.Group("/api")
+	apiRouters := e.Group("/api")
 	// - GET /api/upload/: registor update spreadsheet
-	apiRoutes.GET("/spreadsheet/upload", client.Registor)
+	apiRouters.GET("/spreadsheet/upload", client.Registor)
 	// Twitter/X callback
 	// for Twitter API AccessToken,Secret
-	apiRoutes.GET("/x/auth/request", client.Auth)
-	apiRoutes.GET("/x/auth/callback", client.Callback)
+	apiRouters.GET("/x/auth/request", client.Auth)
+	apiRouters.GET("/x/auth/callback", client.Callback)
+
+	// for Database
+	// Account, Posts登録後のルーティン処理
+	apiRouters.GET("/x/accounts", GetAccounts)
+	// Google cloud schedulesからのトリガーで実行される
+	// Post用データ取得・整形・実行Request
+	apiRouters.GET("/x/post", GetPost)
+
+	// Postデータ操作
+	apiRouters.GET("/x/post", GetPost)       // 1件取得
+	apiRouters.POST("/x/post", CreatePost)   // 新規作成
+	apiRouters.PUT("/x/post", PutPost)       // 修正含む更新
+	apiRouters.DELETE("/x/post", DeletePost) // 削除
+}
+
+func GetAccounts(c echo.Context) error {
+	return c.JSON(200, "accounts")
+}
+
+// GetPost
+func GetPosts(c echo.Context) error {
+	return c.JSON(200, "pong")
+}
+
+func GetPost(c echo.Context) error {
+	return c.JSON(200, "pong")
+}
+
+func CreatePost(c echo.Context) error {
+	return c.JSON(200, "pong")
+}
+
+func PutPost(c echo.Context) error {
+	return c.JSON(200, "pong")
+}
+
+func DeletePost(c echo.Context) error {
+	return c.JSON(200, "pong")
 }

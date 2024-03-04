@@ -39,8 +39,9 @@ func (p *Client) Registor(c echo.Context) error {
 
 	// アクセストークンをキーにしてセッションを取得
 	// セッションが有効か確認
+	ctx := context.Background()
 	claims := models.Claims{}
-	if err := p.GetAnyFirestore(Users, customerToken, &claims); err != nil {
+	if err := p.Firestore.Get(ctx, Users, customerToken, &claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting session or nothing token: %s in session, %v", customerToken, err)})
 	}
 
@@ -84,12 +85,12 @@ func (p *Client) Registor(c echo.Context) error {
 	})
 	// 重複チェック
 	customerAccountIds = models.CheckDuplicate(customerAccountIds)
-	if err := p.CheckExistKeysFirestore(Accounts, customerAccountIds); err != nil {
+	if err := p.Firestore.IsExist(ctx, Accounts, customerAccountIds); err != nil {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking customer account keys > %v", err)})
 	}
 
 	// 顧客のPostsデータをマスターファイルへ追記
-	if err := p.SetAnyFirestore(Posts, "", customerPosts); err != nil {
+	if err := p.Firestore.Set(ctx, Posts, "", customerPosts); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting posts firestore > %v", err)})
 	}
 
@@ -105,14 +106,14 @@ func (p *Client) Registor(c echo.Context) error {
 		SetSubscribed(models.SubscribedFree).
 		SetTime([]int{17}, []int{0}).
 		SetTerm(48)
-	if err := p.SetAnyFirestore(Accounts, account.ID, account); err != nil {
+	if err := p.Firestore.Set(ctx, Accounts, account.ID, account); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting account firestore > %v", err)})
 	}
 
 	// SessionにXUIDをセット
 	claims.Name = customerPosts[0].ID
 	claims.SpreadsheetID = customerSpreadsheetID
-	if err := p.SetAnyFirestore(Users, claims.RequestToken, claims); err != nil {
+	if err := p.Firestore.Set(ctx, Users, claims.RequestToken, claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore > %v", err)})
 	}
 

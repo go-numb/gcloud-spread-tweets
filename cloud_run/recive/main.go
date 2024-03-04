@@ -16,28 +16,27 @@ import (
 	"github.com/go-numb/gcloud-spread-tweets/cloud_run/recive/api"
 )
 
-const (
-	IS_PRODUCTION = true
-)
-
 var (
-	PORT string
+	IS_PRODUCTION = true
+	PORT          string
 )
 
 func init() {
+	// 環境別の処理
+	if runtime.GOOS == "linux" {
+		IS_PRODUCTION = true
+		PORT = fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT"))
+		log.Debug().Msgf("Linuxでの処理, PORT: %s", PORT)
+	} else {
+		IS_PRODUCTION = false
+		PORT = fmt.Sprintf("localhost:%s", os.Getenv("PORT"))
+		log.Debug().Msgf("その他のOSでの処理, PORT: %s", PORT)
+	}
+
 	if IS_PRODUCTION {
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	} else {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-
-	// 環境別の処理
-	if runtime.GOOS == "linux" {
-		PORT = fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT"))
-		log.Debug().Msgf("Linuxでの処理, PORT: %s", PORT)
-	} else {
-		PORT = fmt.Sprintf("localhost:%s", os.Getenv("PORT"))
-		log.Debug().Msgf("その他のOSでの処理, PORT: %s", PORT)
 	}
 }
 
