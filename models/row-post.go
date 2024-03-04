@@ -8,6 +8,11 @@ import (
 	"github.com/go-gota/gota/dataframe"
 )
 
+type PostData struct {
+	*Account
+	*Post
+}
+
 type Post struct {
 	UUID      string `csv:"uuid" dataframe:"uuid" json:"uuid,omitempty"`
 	ID        string `csv:"x_id" dataframe:"x_id" json:"id,omitempty"`
