@@ -12,20 +12,20 @@ import (
 type Post struct {
 	UUID string `csv:"uuid" dataframe:"uuid" firestore:"uuid,omitempty" json:"uuid,omitempty"`
 	// ID is Twitter/X AccountID
-	ID        string `csv:"id" dataframe:"id" firestore:"id,omitempty" json:"id,omitempty"`
-	Text      string `csv:"text" dataframe:"text" firestore:"text,omitempty" json:"text,omitempty"`
+	ID        string `csv:"id" dataframe:"id" firestore:"id" json:"id,omitempty"`
+	Text      string `csv:"text" dataframe:"text" firestore:"text" json:"text,omitempty"`
 	File1     string `csv:"file1" dataframe:"file1" firestore:"file_1,omitempty" json:"file_1,omitempty"`
 	File2     string `csv:"file2" dataframe:"file2" firestore:"file_2,omitempty" json:"file_2,omitempty"`
 	File3     string `csv:"file3" dataframe:"file3" firestore:"file_3,omitempty" json:"file_3,omitempty"`
 	File4     string `csv:"file4" dataframe:"file4" firestore:"file_4,omitempty" json:"file_4,omitempty"`
-	WithFiles int    `csv:"with_files" dataframe:"with_files" firestore:"with_files,omitempty" json:"with_files,omitempty"`
-	Checked   int    `csv:"checked" dataframe:"checked" firestore:"checked,omitempty" json:"checked,omitempty"`
-	Priority  int    `csv:"priority" dataframe:"priority" firestore:"priority,omitempty" json:"priority,omitempty"`
+	WithFiles int    `csv:"with_files" dataframe:"with_files" firestore:"with_files" json:"with_files,omitempty"`
+	Checked   int    `csv:"checked" dataframe:"checked" firestore:"checked" json:"checked,omitempty"`
+	Priority  int    `csv:"priority" dataframe:"priority" firestore:"priority" json:"priority,omitempty"`
 	Count     int    `csv:"count" dataframe:"count" firestore:"count,omitempty" json:"count,omitempty"`
 	PostURL   string `csv:"post_url" dataframe:"post_url" firestore:"post_url,omitempty" json:"post_url,omitempty"`
 
 	// 以下は、csv, dataframeには含まれない
-	IsDelete     bool      `csv:"-" dataframe:"-" firestore:"is_delete,omitempty" json:"-,omitempty"`
+	IsDelete     bool      `csv:"-" dataframe:"-" firestore:"is_delete" json:"-,omitempty"`
 	LastPostedAt time.Time `csv:"-" dataframe:"-" firestore:"last_posted_at,omitempty" json:"last_posted_at,omitempty"`
 	CreatedAt    time.Time `csv:"-" dataframe:"-" firestore:"created_at,omitempty" json:"created_at,omitempty"`
 }
