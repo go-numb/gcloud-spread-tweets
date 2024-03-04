@@ -7,31 +7,31 @@ import './App.css'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
+
 function App() {
   const location = useLocation();
   const [msg, setMsg] = useState("")
   const [result, setResult] = useState("")
   const [token, setToken] = useState("")
+  const [username, setUsername] = useState("")
+
   const requestOAuth = async () => {
     const url = import.meta.env.VITE_API_URL + '/api/x/auth/request'
-    const result = await fetch(url, {
+    const res = await fetch(url, {
       method: 'GET',
     })
 
     // エラーを表示する
-    if (!result.ok) {
-      const data = await result.json()
-      console.log(data.code, data.message)
+    if (!res.ok) {
+      const data = await res.json()
+      console.debug(data.code, data.message)
       return
     }
 
-    const data = await result.json()
-    
+    const data = await res.json()
+
     if (data.data != null && data.data != "") {
-      console.log(data.code, data.message,  data.data.url)
-      if (data.data.token != null && data.data.token != "") {
-        setToken(data.data.token)
-      }
+      console.debug(data.code, data.message, data.data.url)
       window.location.href = data.data.url
     }
   }
@@ -39,19 +39,24 @@ function App() {
   const downloadPDF = async () => {
     // onclickでPDFをダウンロードする
     const url = import.meta.env.BASE_URL + "/assets/files/managed_sheets.xlsx"
-    console.log(url);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = 'managed_sheets.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    console.debug(url);
+    try {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = 'managed_sheets.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error(err);
+      setResult(`<b>ダウンロードエラーが発生しました。<br />${err}</b>`)
+    }
   }
 
   const registor = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    console.log(import.meta.env.VITE_API_URL);
+    console.debug(import.meta.env.VITE_API_URL);
 
 
     const url = `${import.meta.env.VITE_API_URL}/api/spreadsheet/upload?spreadsheet_id=${e.currentTarget.spreadsheet_id.value}&token=${token}`
@@ -66,8 +71,8 @@ function App() {
       setResult(`<b>エラーが発生しました。もう一度お試しください。<br />${data.code}: ${data.message}</b>`)
       return
     } else if (data.data != null && data.data != "") {
-      console.log(data.data);
-      
+      console.debug(data.data);
+
       setMsg("")
       setResult("<b>Twitter/X Account: [ " + data.data.name + " ] を登録しました。明日より、自動投稿を行います。認証したTwitter/Xアカウントと登録アカウントが一致していることを確認してください。</b>")
     }
@@ -84,7 +89,19 @@ function App() {
     if (token != null) {
       setToken(token);
     }
+    const username = query.get('username');
+    if (username != null) {
+      setUsername(username);
+      setResult(`<b>Twitter/X Account: [ ${username} ] で認証を得ました。次に、SpreadsheetIDを登録してください。</b>`)
+    }
   }, [location]);
+
+  const authAccount = () => {
+    if (username != "") {
+      return `<p><b>認証済みTwitter/X Account: [ ${username} ]</b></p>`
+    }
+    return "Twitter/X Account: [ 未認証 ]"
+  };
 
   return (
     <>
@@ -135,15 +152,15 @@ function App() {
               <dt>1. SpreadsheetIDを登録</dt>
               <dd>SpreadsheetIDを登録し、自動化を開始してください。</dd>
               <dt>2. 登録が完了しましたら、自動化を開始します。</dt>
-              <dd>認証したTwitter/Xアカウントと登録したSpreadsheet AccountIDを照合し、Twitter投稿を自動化します。認証したアカウントと登録するアカウントが同様のものであることを確認してください。</dd>
+              <dd>認証したTwitter/Xアカウント[ {username} ]と登録したSpreadsheet AccountIDを照合し、Twitter投稿を自動化します。認証したアカウントと登録するアカウントが同様のものであることを確認してください。
+              <div dangerouslySetInnerHTML={{ __html: authAccount() }}></div>
+              </dd>
             </dl>
 
             <form onSubmit={(e) => registor(e)}>
               <input type="text" id="spreadsheet_id" name="spreadsheet_id" onChange={handler} placeholder="Spreadsheet ID" value={msg}></input>
               <input type="submit" value="登録" />
             </form>
-            <hr />
-            <div dangerouslySetInnerHTML={{ __html: result }}></div>
 
           </div>
         </TabPanel>
@@ -151,6 +168,11 @@ function App() {
           <h2>説明文</h2>
         </TabPanel>
       </Tabs>
+
+      <div style={{display: "block", position: "absolute", left: 0, right: 0, bottom: 0, justifyContent: "center", alignItems: "center"}}>
+      <hr />
+        <div dangerouslySetInnerHTML={{ __html: result }}></div>
+      </div>
     </>
   )
 }
