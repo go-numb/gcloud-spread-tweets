@@ -6,27 +6,27 @@ import (
 	"os"
 	"reflect"
 
-	firebase "firebase.google.com/go"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/option"
+
+	"cloud.google.com/go/firestore"
 )
 
-type ClientForFirebase struct {
+type ClientForFirestore struct {
 	ProjectID      string
 	CredentialFile string
 }
 
-func (p *ClientForFirebase) NewApp(ctx context.Context) (*firebase.App, error) {
-	config := &firebase.Config{ProjectID: p.ProjectID}
+func (p *ClientForFirestore) NewClient(ctx context.Context) (*firestore.Client, error) {
 	if p.CredentialFile != "" {
 		if f, err := os.Stat(p.CredentialFile); err == nil && !f.IsDir() {
-			app, err := firebase.NewApp(ctx, config, option.WithCredentialsFile(p.CredentialFile))
+			app, err := firestore.NewClient(ctx, p.ProjectID, option.WithCredentialsFile(p.CredentialFile))
 			return app, err
 		}
 	}
 
-	app, err := firebase.NewApp(ctx, config)
+	app, err := firestore.NewClient(ctx, p.ProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing app: %v", err)
 	}
@@ -35,14 +35,8 @@ func (p *ClientForFirebase) NewApp(ctx context.Context) (*firebase.App, error) {
 }
 
 // Get dataはpointer, 参照渡し
-func (p *ClientForFirebase) Get(colName, docKey string, data any) error {
-	ctx := context.Background()
-	app, err := p.NewApp(ctx)
-	if err != nil {
-		return fmt.Errorf("error initializing app: %v", err)
-	}
-
-	client, err := app.Firestore(ctx)
+func (p *ClientForFirestore) Get(ctx context.Context, colName, docKey string, data any) error {
+	client, err := p.NewClient(ctx)
 	if err != nil {
 		return fmt.Errorf("error initializing firestore: %v", err)
 	}
@@ -64,14 +58,8 @@ func (p *ClientForFirebase) Get(colName, docKey string, data any) error {
 }
 
 // Set dataはnot pointer, 値渡し
-func (p *ClientForFirebase) Set(colName, docKey string, data any) error {
-	ctx := context.Background()
-	app, err := p.NewApp(ctx)
-	if err != nil {
-		return fmt.Errorf("error initializing app: %v", err)
-	}
-
-	client, err := app.Firestore(ctx)
+func (p *ClientForFirestore) Set(ctx context.Context, colName, docKey string, data any) error {
+	client, err := p.NewClient(ctx)
 	if err != nil {
 		return fmt.Errorf("error initializing firestore: %v", err)
 	}
@@ -113,14 +101,8 @@ func (p *ClientForFirebase) Set(colName, docKey string, data any) error {
 	return nil
 }
 
-func (p *ClientForFirebase) IsExist(colName string, docKeys []string) error {
-	ctx := context.Background()
-	app, err := p.NewApp(ctx)
-	if err != nil {
-		return fmt.Errorf("error initializing app: %v", err)
-	}
-
-	client, err := app.Firestore(ctx)
+func (p *ClientForFirestore) IsExist(ctx context.Context, colName string, docKeys []string) error {
+	client, err := p.NewClient(ctx)
 	if err != nil {
 		return fmt.Errorf("error initializing firestore: %v", err)
 	}
@@ -128,7 +110,7 @@ func (p *ClientForFirebase) IsExist(colName string, docKeys []string) error {
 
 	for _, key := range docKeys {
 		if _, err := client.Collection(colName).Doc(key).Get(ctx); err != nil {
-			// log.Debug().Str("function", "CheckExistKeysFirestore").Msgf("key: %s is ok, not exist", key)
+			log.Debug().Str("function", "CheckExistKeysFirestore").Msgf("key: %s is ok, not exist", key)
 			continue
 		}
 
