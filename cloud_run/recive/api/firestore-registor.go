@@ -53,40 +53,23 @@ func (p *Client) Registor(c echo.Context) error {
 	log.Debug().Msgf("customers post SpreadsheetID: %s, access token: %s, secret token: %s", customerSpreadsheetID, claims.AccessToken, claims.AccessSecret)
 
 	// Spreadsheet API Clientの初期化
-	client := spreads.New(
-		context.Background(),
-		p.CredentialFile,
-	)
-
-	// 顧客、登録Spreadsheet:postsのデータの読み込み
-	client.
-		SetSpreadID(customerSpreadsheetID).
-		SetSheetName(p.SheetPostID).
-		SetRangeKey(p.RangeKey)
-	customerPosts := []models.Post{}
-	customerPostDf, err := client.Read(&customerPosts)
-	if err != nil || len(customerPosts) == 0 {
-		log.Debug().Err(err).Msg("Error reading customer tweets spreadsheet")
-		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: "Error reading customer tweets spreadsheet"})
+	posts, err := p.ReadSpreadsheetForPost(customerSpreadsheetID)
+	if err != nil {
+		log.Error().Err(err).Msg("Error reading customer tweets spreadsheet")
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error reading customer tweets spreadsheet > %v", err)})
 	}
 
-	// 顧客登録Spreadsheetのデータ型式を確認
-	// 顧客データのカラム名とカラム数が一致しているかを確認
-	if err := models.CheckColumns(customerPostDf); err != nil {
-		log.Debug().Err(err).Msg("Error checking columns")
-		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking columns > %v", err)})
+	// Auth認証を行ったAccountIDと一致する投稿データを取得
+	var customerPosts []models.Post
+	for _, post := range posts {
+		if claims.ID != post.ID {
+			continue
+		}
+		customerPosts = append(customerPosts, post)
 	}
 
-	log.Printf("checked customers sheet, rows: %d, columns: %v", customerPostDf.Nrow(), customerPostDf.Names())
-
-	// マスターファイルのアカウントデータの読み込み
-	customerAccountIds := models.GetUniqueKeys(customerPosts, func(t models.Post) string {
-		return t.ID
-	})
-	// 重複チェック
-	customerAccountIds = models.CheckDuplicate(customerAccountIds)
-	if err := p.Firestore.IsExist(ctx, Accounts, customerAccountIds); err != nil {
-		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("Error checking customer account keys > %v", err)})
+	if _, err := p.Firestore.IsExist(ctx, Accounts, claims.ID); err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error checking account exist > %v", err)})
 	}
 
 	// 顧客のPostsデータをマスターファイルへ追記
@@ -111,11 +94,40 @@ func (p *Client) Registor(c echo.Context) error {
 	}
 
 	// SessionにXUIDをセット
-	claims.Name = customerPosts[0].ID
+	claims.ID = customerPosts[0].ID
 	claims.SpreadsheetID = customerSpreadsheetID
 	if err := p.Firestore.Set(ctx, Users, claims.RequestToken, claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore > %v", err)})
 	}
 
 	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: claims})
+}
+
+func (p *Client) ReadSpreadsheetForPost(id string) ([]models.Post, error) {
+	// Spreadsheet API Clientの初期化
+	client := spreads.New(
+		context.Background(),
+		p.CredentialFile,
+	)
+
+	// 顧客、登録Spreadsheet:postsのデータの読み込み
+	client.
+		SetSpreadID(id).
+		SetSheetName(p.SheetPostID).
+		SetRangeKey(p.RangeKey)
+	customerPosts := []models.Post{}
+	customerPostDf, err := client.Read(&customerPosts)
+	if err != nil || len(customerPosts) == 0 {
+		return nil, fmt.Errorf("error reading customer tweets spreadsheet, length: %d", len(customerPosts))
+	}
+
+	// 顧客登録Spreadsheetのデータ型式を確認
+	// 顧客データのカラム名とカラム数が一致しているかを確認
+	if err := models.CheckColumns(customerPostDf); err != nil {
+		return nil, fmt.Errorf("error checking columns > %v", err)
+	}
+
+	log.Printf("checked customers sheet, rows: %d, columns: %v", customerPostDf.Nrow(), customerPostDf.Names())
+
+	return customerPosts, nil
 }

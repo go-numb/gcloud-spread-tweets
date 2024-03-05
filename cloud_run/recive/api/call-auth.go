@@ -6,6 +6,10 @@ import (
 	"net/http"
 
 	"github.com/go-numb/gcloud-spread-tweets/models"
+	"github.com/michimani/gotwi"
+	"github.com/michimani/gotwi/fields"
+	"github.com/michimani/gotwi/user/userlookup"
+	"github.com/michimani/gotwi/user/userlookup/types"
 
 	"github.com/rs/zerolog/log"
 
@@ -86,14 +90,46 @@ func (p *Client) Callback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting access token, %v", err)})
 	}
 
+	username, err := GetMe(accessToken, accessSecret)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting user, %v", err)})
+	}
+
 	claims.AccessToken = accessToken
 	claims.AccessSecret = accessSecret
+	claims.ID = username
 	if err := p.Firestore.Set(ctx, Users, claims.RequestToken, claims); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
 	}
 
-	log.Debug().Msgf("end callback access token: %s, secret: %s", accessToken, accessSecret)
+	log.Debug().Msgf("end callback access token: %s, secret: %s, username: %s", accessToken, accessSecret, username)
 
 	// ページ変異先にリダイレクト
-	return c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s?token=%s", p.GUIURL, requestToken))
+	return c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s?token=%s&username=%s", p.GUIURL, requestToken, username))
+}
+
+func GetMe(accesstoken, secret string) (userid string, err error) {
+	in := &gotwi.NewClientInput{
+		AuthenticationMethod: gotwi.AuthenMethodOAuth1UserContext,
+		OAuthToken:           accesstoken,
+		OAuthTokenSecret:     secret,
+	}
+
+	c, err := gotwi.NewClient(in)
+	if err != nil {
+		return "", err
+	}
+
+	p := &types.GetMeInput{
+		UserFields: fields.UserFieldList{
+			fields.UserFieldCreatedAt,
+		},
+	}
+
+	u, err := userlookup.GetMe(context.Background(), c, p)
+	if err != nil {
+		return "", err
+	}
+
+	return *u.Data.Username, nil
 }

@@ -13,8 +13,9 @@ import (
 )
 
 type Client struct {
-	ProjectID string
-	GUIURL    string
+	ProjectID  string
+	GUIURL     string
+	POSTAPIURL string
 
 	Key         string
 	Secret      string
@@ -40,11 +41,12 @@ func New() *Client {
 	projectID := os.Getenv("PROJECTID")
 	filename := filepath.Join(root, os.Getenv("CREDENTIALS"))
 	return &Client{
-		ProjectID: projectID,
-		GUIURL:    os.Getenv("GUIURL"),
+		ProjectID:  projectID,
+		GUIURL:     os.Getenv("GUIURL"),
+		POSTAPIURL: os.Getenv("POSTAPIURL"),
 
-		Key:         os.Getenv("KEY"),
-		Secret:      os.Getenv("SECRET"),
+		Key:         os.Getenv("GOTWI_API_KEY"),
+		Secret:      os.Getenv("GOTWI_API_KEY_SECRET"),
 		CallbackURL: os.Getenv("CALLBACK"),
 
 		CredentialFile: filename,
@@ -83,41 +85,24 @@ func Routers(e *echo.Echo) {
 	apiRouters.GET("/x/auth/request", client.Auth)
 	apiRouters.GET("/x/auth/callback", client.Callback)
 
-	// for Database
+	// for Database when cloud schedules
 	// Account, Posts登録後のルーティン処理
+	apiRouters.GET("/x/process", client.ScheduleProcess)
+
+	// data control
 	apiRouters.GET("/x/accounts", GetAccounts)
 	// Google cloud schedulesからのトリガーで実行される
 	// Post用データ取得・整形・実行Request
-	apiRouters.GET("/x/post", GetPost)
+	apiRouters.GET("/x/posts", client.GetPosts)
+	apiRouters.POST("/x/posts", client.CreatePosts)
 
 	// Postデータ操作
-	apiRouters.GET("/x/post", GetPost)       // 1件取得
-	apiRouters.POST("/x/post", CreatePost)   // 新規作成
-	apiRouters.PUT("/x/post", PutPost)       // 修正含む更新
-	apiRouters.DELETE("/x/post", DeletePost) // 削除
+	apiRouters.GET("/x/post", client.GetPost)       // 1件取得
+	apiRouters.POST("/x/post", client.CreatePost)   // 新規作成
+	apiRouters.PUT("/x/post", client.PutPost)       // 修正含む更新
+	apiRouters.DELETE("/x/post", client.DeletePost) // 削除
 }
 
 func GetAccounts(c echo.Context) error {
 	return c.JSON(200, "accounts")
-}
-
-// GetPost
-func GetPosts(c echo.Context) error {
-	return c.JSON(200, "pong")
-}
-
-func GetPost(c echo.Context) error {
-	return c.JSON(200, "pong")
-}
-
-func CreatePost(c echo.Context) error {
-	return c.JSON(200, "pong")
-}
-
-func PutPost(c echo.Context) error {
-	return c.JSON(200, "pong")
-}
-
-func DeletePost(c echo.Context) error {
-	return c.JSON(200, "pong")
 }

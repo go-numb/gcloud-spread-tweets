@@ -41,8 +41,8 @@ func init() {
 }
 
 func main() {
-	key := os.Getenv("KEY")
-	secret := os.Getenv("SECRET")
+	key := os.Getenv("GOTWI_API_KEY_SECRET")
+	secret := os.Getenv("GOTWI_API_KEY_SECRET")
 	if key == "" || secret == "" {
 		log.Fatal().Msg("X KEY, X SECRET is not set, does not load .env")
 	}
