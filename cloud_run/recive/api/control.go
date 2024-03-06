@@ -4,12 +4,25 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-numb/gcloud-spread-tweets/models"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 )
+
+// GetAccounts 現在時刻に合致したアカウントを取得
+func (p *Client) GetAccounts(c echo.Context) error {
+	ctx := context.Background()
+	accounts, err := p.getAccounts(ctx, time.Now())
+	if err != nil {
+		log.Debug().Err(err).Msg("failed to get accounts")
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: accounts})
+}
 
 // GetPost Postを取得 query: token, username
 func (p *Client) GetPosts(c echo.Context) error {

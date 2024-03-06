@@ -17,26 +17,19 @@ import (
 )
 
 var (
-	IS_PRODUCTION = true
-	PORT          string
+	PORT string
 )
 
 func init() {
 	// 環境別の処理
 	if runtime.GOOS == "linux" {
-		IS_PRODUCTION = true
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 		PORT = fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT"))
 		log.Debug().Msgf("Linuxでの処理, PORT: %s", PORT)
 	} else {
-		IS_PRODUCTION = false
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		PORT = fmt.Sprintf("localhost:%s", os.Getenv("PORT"))
 		log.Debug().Msgf("その他のOSでの処理, PORT: %s", PORT)
-	}
-
-	if IS_PRODUCTION {
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	} else {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 }
 

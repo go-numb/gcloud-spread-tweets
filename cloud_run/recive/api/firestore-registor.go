@@ -68,6 +68,10 @@ func (p *Client) Registor(c echo.Context) error {
 		customerPosts = append(customerPosts, post)
 	}
 
+	if len(customerPosts) == 0 {
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "Error auth account not found in customer posts spreadsheet"})
+	}
+
 	if _, err := p.Firestore.IsExist(ctx, Accounts, claims.ID); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error checking account exist > %v", err)})
 	}

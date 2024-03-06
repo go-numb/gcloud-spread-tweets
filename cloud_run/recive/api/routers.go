@@ -90,7 +90,7 @@ func Routers(e *echo.Echo) {
 	apiRouters.GET("/x/process", client.ScheduleProcess)
 
 	// data control
-	apiRouters.GET("/x/accounts", GetAccounts)
+	apiRouters.GET("/x/accounts", client.GetAccounts)
 	// Google cloud schedulesからのトリガーで実行される
 	// Post用データ取得・整形・実行Request
 	apiRouters.GET("/x/posts", client.GetPosts)
@@ -101,8 +101,4 @@ func Routers(e *echo.Echo) {
 	apiRouters.POST("/x/post", client.CreatePost)   // 新規作成
 	apiRouters.PUT("/x/post", client.PutPost)       // 修正含む更新
 	apiRouters.DELETE("/x/post", client.DeletePost) // 削除
-}
-
-func GetAccounts(c echo.Context) error {
-	return c.JSON(200, "accounts")
 }

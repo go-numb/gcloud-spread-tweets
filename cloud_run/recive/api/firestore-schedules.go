@@ -65,9 +65,11 @@ func (p *Client) getAccounts(ctx context.Context, t time.Time) ([]models.Account
 	}
 	defer store.Close()
 
+	hour := t.Hour()
+	minute := t.Minute()
+
 	docs, err := store.Collection(Accounts).
-		Where("hours", "array-contains", t.Hour()).
-		Where("minutes", "array-contains", t.Minute()).
+		Where("hours", "array-contains", hour).
 		Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
@@ -81,7 +83,12 @@ func (p *Client) getAccounts(ctx context.Context, t time.Time) ([]models.Account
 			continue
 		}
 
-		accounts = append(accounts, account)
+		for _, m := range account.Minutes {
+			if m != minute {
+				continue
+			}
+			accounts = append(accounts, account)
+		}
 	}
 
 	return accounts, nil
