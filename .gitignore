@@ -11,3 +11,6 @@ Dockerfile
 
 go.work
 go.work.sum
+
+# desktop app for cross-platform os
+app

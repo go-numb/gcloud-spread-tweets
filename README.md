@@ -1,5 +1,5 @@
 # Spread to twitter/x with Google cloud services
-
+├── app/                             # Storage閲覧操作専用アプリ  
 ├── cloud_functions/                 # Google Cloud Functions用のコード  
 │   ├── scheduler_task/              # 定期実行タスク用のディレクトリ  
 │   │   └── main.go                  # Cloud Functions用の関数  
@@ -12,7 +12,7 @@
 │       ├── handlers/                # HTTPハンドラー  
 │       ├── middleware/              # ミドルウェア  
 │       └── ...                      # その他のパッケージ  
-└── web_interface/                   # Webインターフェイス (Reactアプリ)用  
+└── web_interface/                   # Webインターフェイス (Reactアプリ with Cloud storage)用  
     ├── dist/                        # Reactビルドアウトプット (GCSにアップロードする)  
     └── src/                         # Reactソースファイル  
         ├── components/              # Reactコンポーネント  
@@ -20,6 +20,7 @@
 
 
 ## Usage
+- Desktop app   : Storage閲覧用アプリ
 - Google cloud service
   - Run         : API
   - Functions   : Post実行
