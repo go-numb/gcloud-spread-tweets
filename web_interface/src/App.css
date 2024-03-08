@@ -30,13 +30,36 @@
   padding: 2em;
 }
 
-dl {
+div {
   text-align: left;
-
 }
 
 dt {
   font-weight: bold;
+}
+
+dd {
+  margin-left: 1em;
+}
+
+/* テーブルデザイン
+  すべてのセルの幅を揃えて、罫線を設ける
+  テーブルの横スクロールを可能にする
+*/
+.container {
+  overflow-x: auto;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1280px;
+  overflow-x: auto;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
 }
 
 
@@ -79,6 +102,35 @@ dt {
   background-color: #0064bd;
   box-shadow: none;
 }
+
+/* css フォームデザイン horizon */
+.form-horizon {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.form-horizon > label {
+  margin-bottom: 0.5em;
+}
+
+.form-horizon > input {
+  margin: 1em;
+}
+
+.form-horizon > textarea {
+  margin: 1em;
+}
+
+/* 表示最下部に固定し、他要素の最上部レイヤーに表示するdiv */
+.fixed-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
 
 @keyframes logo-spin {
   from {
