@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"github.com/go-numb/gcloud-spread-tweets/models"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -70,7 +71,7 @@ func (p *Client) CreatePosts(c echo.Context) error {
 func (p *Client) GetPost(c echo.Context) error {
 	id := c.QueryParam("post_id")
 	if id == "" {
-		return c.JSON(http.StatusBadRequest, "id is empty")
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "post_id is empty"})
 	}
 
 	ctx := context.Background()
@@ -88,16 +89,16 @@ func (p *Client) CreatePost(c echo.Context) error {
 	// １つの投稿データを保存
 	var post models.Post
 	if err := c.Bind(&post); err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid request")
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: fmt.Sprintf("invalid request, %v", err)})
 	}
 
 	// Check
 	if post.ID == "" {
 		return c.JSON(http.StatusBadRequest, "id is empty")
 	} else if post.Text == "" {
-		return c.JSON(http.StatusBadRequest, "text is empty")
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "text is empty"})
 	} else if len([]byte(post.Text)) > 280 {
-		return c.JSON(http.StatusBadRequest, "text is over 280 characters, please shorten it or subscribe to the premium plan.")
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "text is over 280 characters, please shorten it or subscribe to the premium plan."})
 	}
 
 	post.UUID = uuid.New().String()
@@ -120,8 +121,30 @@ func (p *Client) PutPost(c echo.Context) error {
 	}
 
 	ctx := context.Background()
-	if err := p.Firestore.Set(ctx, Posts, post.UUID, post); err != nil {
+	app, err := p.Firestore.NewClient(ctx)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
+	}
+	defer app.Close()
+
+	// 指定項目のみ更新を許可する
+	// Why: 他の項目が更新されると、他の項目が空になる可能性や、不正な値が入る可能性があるため
+	// GUI: 値はフォームに入力済み、変更し血の更新をリクエストする。よって、空になっていれば、空になることを許可する
+	updateValues := []firestore.Update{
+		{Path: "file_1", Value: post.File1},
+		{Path: "file_2", Value: post.File2},
+		{Path: "file_3", Value: post.File3},
+		{Path: "file_4", Value: post.File4},
+		{Path: "with_files", Value: post.WithFiles},
+		{Path: "checked", Value: post.Checked},
+		{Path: "priority", Value: post.Priority},
+	}
+	if post.Text != "" {
+		updateValues = append(updateValues, firestore.Update{Path: "text", Value: post.Text})
+	}
+	if _, err := app.Collection(Posts).Doc(post.UUID).Update(ctx, updateValues); err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error updating firestore, %v", err)})
+
 	}
 
 	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: post})
@@ -131,14 +154,21 @@ func (p *Client) PutPost(c echo.Context) error {
 func (p *Client) DeletePost(c echo.Context) error {
 	var post models.Post
 	if err := c.Bind(&post); err != nil {
-		return c.JSON(http.StatusBadRequest, "invalid request")
+		return c.JSON(http.StatusBadRequest, fmt.Sprintf("invalid request, %v", err))
 	}
 
-	post.IsDelete = true
-
 	ctx := context.Background()
-	if err := p.Firestore.Set(ctx, Posts, post.UUID, post); err != nil {
+	app, err := p.Firestore.NewClient(ctx)
+	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
+	}
+	defer app.Close()
+
+	post.IsDelete = true
+	if _, err := app.Collection(Posts).Doc(post.UUID).Update(ctx, []firestore.Update{
+		{Path: "is_delete", Value: true},
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error deleting firestore, %v", err)})
 	}
 
 	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: post})
