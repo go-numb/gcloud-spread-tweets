@@ -29,11 +29,12 @@ func (p *Client) GetAccounts(c echo.Context) error {
 func (p *Client) GetPosts(c echo.Context) error {
 	token := c.QueryParam("token")
 	username := c.QueryParam("username")
-	if token == "" || username == "" {
-		return c.JSON(http.StatusForbidden, "token or username is empty")
-	}
 
 	ctx := context.Background()
+	if err := p.IsUserChecker(ctx, token, username); err != nil {
+		return c.JSON(http.StatusForbidden, err)
+	}
+
 	posts, err := p.getPosts(ctx, models.Account{
 		ID: username,
 	})
@@ -46,6 +47,14 @@ func (p *Client) GetPosts(c echo.Context) error {
 
 // CreatePosts Postsを新規作成 query: spread_id
 func (p *Client) CreatePosts(c echo.Context) error {
+	token := c.QueryParam("token")
+	username := c.QueryParam("username")
+
+	ctx := context.Background()
+	if err := p.IsUserChecker(ctx, token, username); err != nil {
+		return c.JSON(http.StatusForbidden, err)
+	}
+
 	spreadID := c.QueryParam("spread_id")
 	if spreadID == "" {
 		return c.JSON(http.StatusBadRequest, "spread_id is empty")
@@ -59,7 +68,6 @@ func (p *Client) CreatePosts(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error reading customer tweets spreadsheet > %v", err)})
 	}
 
-	ctx := context.Background()
 	if err := p.Firestore.Set(ctx, Posts, "", posts); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting posts firestore > %v", err)})
 	}
@@ -69,12 +77,19 @@ func (p *Client) CreatePosts(c echo.Context) error {
 
 // GetPost Postを取得 query: post_id
 func (p *Client) GetPost(c echo.Context) error {
+	token := c.QueryParam("token")
+	username := c.QueryParam("username")
+
+	ctx := context.Background()
+	if err := p.IsUserChecker(ctx, token, username); err != nil {
+		return c.JSON(http.StatusForbidden, err)
+	}
+
 	id := c.QueryParam("post_id")
 	if id == "" {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "post_id is empty"})
 	}
 
-	ctx := context.Background()
 	var post models.Post
 	if err := p.Firestore.Get(ctx, Posts, id, &post); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error getting firestore, %v", err)})
@@ -85,10 +100,12 @@ func (p *Client) GetPost(c echo.Context) error {
 
 // CreatePost Postを新規作成 from form values
 func (p *Client) CreatePost(c echo.Context) error {
-	fmt.Println("CreatePost")
 	token := c.QueryParam("token")
-	if token == "" {
-		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "token is empty"})
+	username := c.QueryParam("username")
+
+	ctx := context.Background()
+	if err := p.IsUserChecker(ctx, token, username); err != nil {
+		return c.JSON(http.StatusForbidden, err)
 	}
 
 	// フォームデータからデータを取得
@@ -110,7 +127,6 @@ func (p *Client) CreatePost(c echo.Context) error {
 	post.UUID = uuid.New().String()
 	post.SetCreateAt()
 
-	ctx := context.Background()
 	if err := p.Firestore.Set(ctx, Posts, post.UUID, post); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
 	}
@@ -122,8 +138,11 @@ func (p *Client) CreatePost(c echo.Context) error {
 // 主にchecked, priorityの更新(削除除く)
 func (p *Client) PutPost(c echo.Context) error {
 	token := c.QueryParam("token")
-	if token == "" {
-		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "token is empty"})
+	username := c.QueryParam("username")
+
+	ctx := context.Background()
+	if err := p.IsUserChecker(ctx, token, username); err != nil {
+		return c.JSON(http.StatusForbidden, err)
 	}
 
 	var post models.Post
@@ -131,7 +150,6 @@ func (p *Client) PutPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid request")
 	}
 
-	ctx := context.Background()
 	app, err := p.Firestore.NewClient(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
@@ -164,8 +182,11 @@ func (p *Client) PutPost(c echo.Context) error {
 // DeletePost Postを削除
 func (p *Client) DeletePost(c echo.Context) error {
 	token := c.QueryParam("token")
-	if token == "" {
-		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "token is empty"})
+	username := c.QueryParam("username")
+
+	ctx := context.Background()
+	if err := p.IsUserChecker(ctx, token, username); err != nil {
+		return c.JSON(http.StatusForbidden, err)
 	}
 
 	uuid := c.QueryParam("uuid")
@@ -173,7 +194,6 @@ func (p *Client) DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "uuid is empty"})
 	}
 
-	ctx := context.Background()
 	app, err := p.Firestore.NewClient(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
@@ -187,4 +207,16 @@ func (p *Client) DeletePost(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: nil})
+}
+
+func (p *Client) IsUserChecker(ctx context.Context, token, username string) error {
+	if token == "" || username == "" {
+		return fmt.Errorf("token or username is empty")
+	}
+
+	if !p.isOK(ctx, token, username) {
+		return fmt.Errorf("token or username is invalid")
+	}
+
+	return nil
 }

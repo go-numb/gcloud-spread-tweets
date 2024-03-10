@@ -124,3 +124,29 @@ func (p *Client) getPosts(ctx context.Context, account models.Account) ([]models
 
 	return posts, nil
 }
+
+// isOK Token&Usernameが存在するか確認
+func (p *Client) isOK(ctx context.Context, token, username string) bool {
+	store, err := p.Firestore.NewClient(ctx)
+	if err != nil {
+		return false
+	}
+	defer store.Close()
+
+	doc, err := store.Collection(Users).Doc(token).Get(ctx)
+	if err != nil {
+		return false
+	}
+
+	var claims models.Claims
+	if err := doc.DataTo(&claims); err != nil {
+		log.Warn().Err(err).Msg("failed to convert data to posts")
+		return false
+	}
+
+	if claims.ID != username {
+		return false
+	}
+
+	return true
+}
