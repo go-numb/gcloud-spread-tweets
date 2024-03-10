@@ -104,7 +104,7 @@ func (p *Client) getPosts(ctx context.Context, account models.Account) ([]models
 
 	docs, err := store.Collection(Posts).
 		Where("id", "==", account.ID).
-		Where("checked", "!=", 0).
+		// Where("checked", "!=", 0). // Checked=0でも取得（GUIで確認変更を可能にするため）
 		Where("is_delete", "==", false).
 		Documents(ctx).GetAll()
 	if err != nil {

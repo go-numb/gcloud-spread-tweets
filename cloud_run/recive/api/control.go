@@ -85,6 +85,12 @@ func (p *Client) GetPost(c echo.Context) error {
 
 // CreatePost Postを新規作成 from form values
 func (p *Client) CreatePost(c echo.Context) error {
+	fmt.Println("CreatePost")
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "token is empty"})
+	}
+
 	// フォームデータからデータを取得
 	// １つの投稿データを保存
 	var post models.Post
@@ -115,6 +121,11 @@ func (p *Client) CreatePost(c echo.Context) error {
 // PutPost Postを更新
 // 主にchecked, priorityの更新(削除除く)
 func (p *Client) PutPost(c echo.Context) error {
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "token is empty"})
+	}
+
 	var post models.Post
 	if err := c.Bind(&post); err != nil {
 		return c.JSON(http.StatusBadRequest, "invalid request")
@@ -152,9 +163,14 @@ func (p *Client) PutPost(c echo.Context) error {
 
 // DeletePost Postを削除
 func (p *Client) DeletePost(c echo.Context) error {
-	var post models.Post
-	if err := c.Bind(&post); err != nil {
-		return c.JSON(http.StatusBadRequest, fmt.Sprintf("invalid request, %v", err))
+	token := c.QueryParam("token")
+	if token == "" {
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "token is empty"})
+	}
+
+	uuid := c.QueryParam("uuid")
+	if uuid == "" {
+		return c.JSON(http.StatusBadRequest, Response{Code: http.StatusBadRequest, Message: "uuid is empty"})
 	}
 
 	ctx := context.Background()
@@ -164,12 +180,11 @@ func (p *Client) DeletePost(c echo.Context) error {
 	}
 	defer app.Close()
 
-	post.IsDelete = true
-	if _, err := app.Collection(Posts).Doc(post.UUID).Update(ctx, []firestore.Update{
+	if _, err := app.Collection(Posts).Doc(uuid).Update(ctx, []firestore.Update{
 		{Path: "is_delete", Value: true},
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error deleting firestore, %v", err)})
 	}
 
-	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: post})
+	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: nil})
 }

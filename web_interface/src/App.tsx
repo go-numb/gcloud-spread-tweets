@@ -4,6 +4,8 @@ import BtnSign from '/public/assets/images/sign-in-with-twitter-gray.png'
 // import BtnSign from './assets/sign-in-with-twitter-gray.png'
 import './App.css'
 
+import axios from 'axios';
+
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
@@ -31,6 +33,98 @@ function App() {
   const [result, setResult] = useState("")
   const [token, setToken] = useState("")
   const [username, setUsername] = useState("")
+
+  // formから得た値を元に、postを登録する
+  const createPost = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const postText = e.currentTarget.postText.value
+    const file1 = e.currentTarget.file1.value
+    const file2 = e.currentTarget.file2.value
+    const file3 = e.currentTarget.file3.value
+    const file4 = e.currentTarget.file4.value
+    const priority = parseInt(e.currentTarget.priority.value, 10)
+    
+    const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token
+    const send_post: Post = {
+      uuid: "",
+      id: username,
+      text: postText,
+      file_1: file1,
+      file_2: file2,
+      file_3: file3,
+      file_4: file4,
+      with_files: 1,
+      checked: 1,
+      priority: priority,
+    }
+    console.log(send_post);
+    
+    axios.post(url, send_post)
+      .then((res) => {
+        // postsに新しいpostを追加
+        const newPosts = [...posts, res.data.data]
+        setPosts(newPosts)
+
+        setResult(`<b>post id: [ ${res.data.data.uuid} ] の投稿を登録しました。</b>`)
+      })
+      .catch((err) => {
+        console.error(err)
+        setResult(`<b>エラーが発生しました。もう一度お試しください。<br />${err}</b>`)
+      })
+  }
+
+  // posts:Post[]からuuidで検索してPostを取得する
+  const putPost = (uuid: String) => {
+    console.log(uuid);
+    const send_post = posts.find((post) => post.uuid === uuid)
+    console.log(send_post)
+
+    // popupで確認を行い、更新を行う
+    const result = window.confirm("更新しますか？")
+    if (result) {
+      console.log("更新します")
+      const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token
+      axios.put(url, send_post)
+        .then((res) => {      
+          setResult(`<b>post id: [ ${res.data.data.uuid} ] の投稿を更新しました。</b>`)
+        })
+        .catch((err) => {
+          console.error(err)
+          setResult(`<b>エラーが発生しました。もう一度お試しください。<br />${err}</b>`)
+        })
+
+    } else {
+      console.log("更新しません")
+    }
+  }
+
+    // posts:Post[]からuuidで検索してPostを取得する
+    const deletePost = (uuid: String) => {
+      console.debug(uuid);
+  
+      // popupで確認を行い、更新を行う
+      const result = window.confirm("本当に削除しますか？")
+      if (result) {
+        console.debug("削除します")
+        const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&uuid=' + uuid
+        axios.delete(url)
+          .then((res) => {      
+            // postsからuuidを持つpostを削除
+            const newPosts = posts.filter((post) => post.uuid !== uuid)
+            setPosts(newPosts)
+
+            setResult(`<b>post id: [ ${res.data.data.uuid} ] の投稿を削除しました。</b>`)
+          })
+          .catch((err) => {
+            console.error(err)
+            setResult(`<b>エラーが発生しました。もう一度お試しください。<br />${err}</b>`)
+          })
+  
+      } else {
+        setResult(`<b>削除を取りやめました。</b>`)
+      }
+    }
+  
 
   const requestOAuth = async () => {
     const url = import.meta.env.VITE_API_URL + '/api/x/auth/request'
@@ -122,29 +216,6 @@ function App() {
     }
   }
 
-  const putPost = async () => {
-    // 現在禁止中のポップアップを表示する
-    alert("現在、この機能は制限しています。")
-
-    const url = import.meta.env.VITE_API_URL + '/api/x/post'
-    const res = await fetch(url, {
-      method: 'PUT',
-    })
-
-    // エラーを表示する
-    if (!res.ok) {
-      const data = await res.json()
-      console.debug(data.code, data.message)
-      return
-    }
-
-    const data = await res.json()
-
-    if (data.data != null && data.data != "") {
-      console.debug(data.code, data.message, data.data)
-      setResult(`<b>Spreadsheet ID: [ ${data.data.spreadsheet_id} ] の投稿を更新しました。</b>`)
-    }
-  }
 
   const handler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMsg(e.target.value)
@@ -279,7 +350,6 @@ function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th>UUID</th>
                       <th>AccountID</th>
                       <th>Text</th>
                       <th>File1</th>
@@ -293,8 +363,7 @@ function App() {
                   </thead>
                   <tbody>
                     {posts.map((post, index) => (
-                      <tr key={post.id}>
-                        <td>{post.uuid.substring(0, 3) + '…'}</td>
+                      <tr key={post.uuid}>
                         <td>{post.id}</td>
                         <td><input type="text" value={post.text} onChange={(e) => handleInputChange(e, index, 'text')} /></td>
                         <td><input type="text" value={post.file_1} onChange={(e) => handleInputChange(e, index, 'file_1')} /></td>
@@ -304,8 +373,8 @@ function App() {
                         <td><input type="text" value={post.checked} onChange={(e) => handleInputChange(e, index, 'checked')} /></td>
                         <td><input type="text" value={post.priority} onChange={(e) => handleInputChange(e, index, 'priority')} /></td>
                         <td>
-                          <button onClick={putPost} title='削除'>🗑</button>
-                          <button onClick={putPost} title='更新'>📝</button>
+                          <button onClick={() => deletePost(post.uuid)} title='削除'>🗑</button>
+                          <button onClick={() => putPost(post.uuid)} title='更新'>📝</button>
                         </td>
                       </tr>
                     ))}
@@ -315,7 +384,9 @@ function App() {
 
               <div style={{ margin: "3rem auto", paddingBottom: "5rem" }}>
                 <h2>新規投稿追加フォーム</h2>
-                <form className='form-horizon'>
+                <form className='form-horizon' onSubmit={(e) => createPost(e)}>
+                  <label htmlFor="id">AccountID:</label>
+                  <input type="text" id="id" name="id" value={username} disabled />
                   <label htmlFor="postText">Post Text:</label>
                   <textarea id="postText" name="postText" rows={10} cols={50} placeholder="Post Text" />
                   <label htmlFor="file1">File 1:</label>
@@ -326,12 +397,9 @@ function App() {
                   <input type="text" id="file3" name="file3" placeholder="File 3" />
                   <label htmlFor="file4">File 4:</label>
                   <input type="text" id="file4" name="file4" placeholder="File 4" />
-                  <input className='btn-dl' type="submit" onClick={
-                    (e) => {
-                      e.preventDefault()
-                      alert("現在、この機能は制限しています。")
-                    }
-                  } value="Post" />
+                  <label htmlFor="priority">Priority:</label>
+                  <input type="number" step={1} id="priority" name="priority" placeholder="Priority" />
+                  <input className='btn-dl' type="submit" value="Post" />
                 </form>
               </div>
             </div>
