@@ -44,7 +44,7 @@ function App() {
     const file4 = e.currentTarget.file4.value
     const priority = parseInt(e.currentTarget.priority.value, 10)
     
-    const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token
+    const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&username=' + username
     const send_post: Post = {
       uuid: "",
       id: username,
@@ -83,7 +83,7 @@ function App() {
     const result = window.confirm("更新しますか？")
     if (result) {
       console.log("更新します")
-      const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token
+      const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&username=' + username
       axios.put(url, send_post)
         .then((res) => {      
           setResult(`<b>post id: [ ${res.data.data.uuid} ] の投稿を更新しました。</b>`)
@@ -106,7 +106,7 @@ function App() {
       const result = window.confirm("本当に削除しますか？")
       if (result) {
         console.debug("削除します")
-        const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&uuid=' + uuid
+        const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&username=' + username + '&uuid=' + uuid
         axios.delete(url)
           .then((res) => {      
             // postsからuuidを持つpostを削除
