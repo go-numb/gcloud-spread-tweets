@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-numb/gcloud-spread-tweets/models"
 	xpostblue "github.com/go-numb/x-post-to-blue"
 
 	"github.com/michimani/gotwi"
@@ -11,16 +12,28 @@ import (
 	"github.com/michimani/gotwi/tweet/managetweet/types"
 )
 
-func (p *Post) Do() error {
-	client, err := new(p.AccessToken, p.AccessSecret)
-	if err != nil {
-		return err
-	}
-	op := &types.CreateInput{}
+const XLIMIT = 141
 
+type Post struct {
+	AccessToken  string
+	AccessSecret string
+	Password     string
+
+	*models.Post
+}
+
+func (p *Post) Do() error {
+	if !IsBlue(p.Text) {
+		return p.DoAPI()
+	}
+	return p.DoGUI()
+}
+
+func (p *Post) DoAPI() error {
+	op := &types.CreateInput{}
 	medias, isMedia := isMedia(p)
-	if !isMedia {
-		mediaIDs, err := p.UploadMedias(medias...)
+	if isMedia {
+		mediaIDs, err := UploadMedias(p.AccessToken, p.AccessSecret, medias...)
 		if err != nil {
 			// 画像Uploadでエラーが出たときは、WithFiles設定に従う
 			if p.WithFiles == 1 {
@@ -35,6 +48,10 @@ func (p *Post) Do() error {
 		}
 	}
 
+	client, err := new(p.AccessToken, p.AccessSecret)
+	if err != nil {
+		return err
+	}
 	res, err := managetweet.Create(context.Background(), client, op)
 	if err != nil {
 		return err
@@ -50,6 +67,15 @@ func (p *Post) DoGUI() error {
 	isHeadless := true
 	client := xpostblue.New(isHeadless)
 	defer client.Close()
+
+	if err := client.Login(p.ID, p.Password); err != nil {
+		return err
+	}
+
+	medias, _ := isMedia(p)
+	if err := client.Post(true, 60, p.Text, medias...); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -78,4 +104,12 @@ func isMedia(post *Post) ([]string, bool) {
 	}
 
 	return results, true
+}
+
+// 文字数での判定
+func IsBlue(s string) bool {
+	if len([]rune(s)) < XLIMIT {
+		return false
+	}
+	return true
 }

@@ -12,10 +12,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (p *Post) UploadMedias(filenames ...string) ([]string, error) {
+// API media uploader
+// - UploadMedias
+// - UploadImage
+// - UploadVideo
+
+func UploadMedias(accessToken, accessSecret string, filenames ...string) ([]string, error) {
 	api := anaconda.NewTwitterApiWithCredentials(
-		p.AccessToken,
-		p.AccessSecret,
+		accessToken,
+		accessSecret,
 		os.Getenv("CUNSUMERKEY"),
 		os.Getenv("CUNSUMERSECRET"),
 	)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,27 +15,19 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-const (
-	IS_PRODUCTION = false
-)
-
 var (
 	PORT string
 )
 
 func init() {
-	if IS_PRODUCTION {
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	} else {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-
 	// 環境別の処理
 	if runtime.GOOS == "linux" {
 		PORT = fmt.Sprintf("0.0.0.0:%s", os.Getenv("PORT"))
-		log.Debug().Msgf("Linuxでの処理, PORT: %s", PORT)
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		log.Printf("Linuxでの処理, PORT: %s", PORT)
 	} else {
 		PORT = fmt.Sprintf("localhost:%s", os.Getenv("PORT"))
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Debug().Msgf("その他のOSでの処理, PORT: %s", PORT)
 	}
 
@@ -54,8 +45,6 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	// get query
-
 	// get time
 	t := time.Now()
 	if err := Post(t); err != nil {
@@ -72,9 +61,7 @@ func Post(t time.Time) error {
 		return fmt.Errorf("time switcher is off")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	c := libs.NewClient(ctx)
-	defer cancel()
+	c := libs.NewClient()
 
 	// Read spreadsheet:sheet@users rows
 	// 管理者のスプレッドシート:usersを読み込む
@@ -94,7 +81,7 @@ func Post(t time.Time) error {
 	for i := 0; i < len(accounts); i++ {
 		// Get account spreadsheet:sheet@posts
 		// 各ユーザーのスプレッドシート:postsを取得
-		posts, err := c.GetPosts()
+		posts, err := c.GetPosts(accounts[i])
 		if err != nil {
 			return err
 		}

@@ -1,45 +1,23 @@
 package libs
 
 import (
-	"context"
-	"log"
 	"os"
 
-	"cloud.google.com/go/firestore"
-	firebase "firebase.google.com/go/v4"
 	"github.com/go-numb/gcloud-spread-tweets/models"
 	"golang.org/x/exp/rand"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 type Client struct {
-	Firestore *firestore.Client
+	Firestore *models.ClientForFirestore
 }
 
-type Account struct {
-	models.Account
-}
-
-type Post struct {
-	AccessToken  string
-	AccessSecret string
-
-	models.Post
-}
-
-func NewClient(ctx context.Context) *Client {
-	config := &firebase.Config{ProjectID: os.Getenv("PROJECTID")}
-	fire, err := firebase.NewApp(ctx, config)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	api, err := fire.Firestore(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func NewClient() *Client {
 	return &Client{
-		Firestore: api,
+		Firestore: &models.ClientForFirestore{
+			ProjectID: os.Getenv("PROJECTID"),
+		},
 	}
 }
 

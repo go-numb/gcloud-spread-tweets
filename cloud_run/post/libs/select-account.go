@@ -3,12 +3,14 @@ package libs
 import (
 	"fmt"
 	"time"
+
+	"github.com/go-numb/gcloud-spread-tweets/models"
 )
 
 var EventKeys = []string{"all", "-", ""}
 
-func SelectAccount(accounts []Account, t time.Time) ([]Account, error) {
-	var results []Account
+func SelectAccount(accounts []models.Account, t time.Time) ([]models.Account, error) {
+	var results []models.Account
 	for i := 0; i < len(accounts); i++ {
 		if accounts[i].ID == "" {
 			continue
