@@ -147,6 +147,8 @@ func (p *Client) PutPost(c echo.Context) error {
 
 	var post models.Post
 	if err := c.Bind(&post); err != nil {
+		// 失敗したときにリクエストボディをStringとして出力する
+		log.Error().Err(err).Msg("failed to bind request body")
 		return c.JSON(http.StatusBadRequest, "invalid request")
 	}
 
@@ -206,7 +208,7 @@ func (p *Client) DeletePost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error deleting firestore, %v", err)})
 	}
 
-	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: nil})
+	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: uuid})
 }
 
 func (p *Client) IsUserChecker(ctx context.Context, token, username string) error {

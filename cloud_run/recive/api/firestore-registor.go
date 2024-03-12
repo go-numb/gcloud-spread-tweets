@@ -28,6 +28,13 @@ import (
 func (p *Client) Registor(c echo.Context) error {
 	log.Debug().Msgf("call Registor")
 
+	isRepost := c.QueryParam("repost")
+	if isRepost == "true" {
+		log.Print("spread_id is repost data")
+	} else {
+		log.Print("spread_id is new data")
+	}
+
 	// フォームからのPOST[spread_id, token]を受け取る
 	customerSpreadsheetID := strings.TrimSpace(c.QueryParam("spreadsheet_id"))
 	customerToken := strings.TrimSpace(c.QueryParam("token"))
@@ -122,7 +129,7 @@ func (p *Client) ReadSpreadsheetForPost(id string) ([]models.Post, error) {
 	customerPosts := []models.Post{}
 	customerPostDf, err := client.Read(&customerPosts)
 	if err != nil || len(customerPosts) == 0 {
-		return nil, fmt.Errorf("error reading customer tweets spreadsheet, length: %d", len(customerPosts))
+		return nil, fmt.Errorf("error reading customer tweets spreadsheet, length: %d, %v", len(customerPosts), err)
 	}
 
 	// 顧客登録Spreadsheetのデータ型式を確認
