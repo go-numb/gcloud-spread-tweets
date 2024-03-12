@@ -33,6 +33,7 @@ function App() {
   const [result, setResult] = useState("")
   const [token, setToken] = useState("")
   const [username, setUsername] = useState("")
+  const [spreadsheetIds, setSpreadsheetIds] = useState<string[]>([])
 
   // formから得た値を元に、postを登録する
   const createPost = (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,7 +44,7 @@ function App() {
     const file3 = e.currentTarget.file3.value
     const file4 = e.currentTarget.file4.value
     const priority = parseInt(e.currentTarget.priority.value, 10)
-    
+
     const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&username=' + username
     const send_post: Post = {
       uuid: "",
@@ -57,8 +58,8 @@ function App() {
       checked: 1,
       priority: priority,
     }
-    console.log(send_post);
-    
+    console.debug(send_post);
+
     axios.post(url, send_post)
       .then((res) => {
         // postsに新しいpostを追加
@@ -75,17 +76,17 @@ function App() {
 
   // posts:Post[]からuuidで検索してPostを取得する
   const putPost = (uuid: String) => {
-    console.log(uuid);
+    console.debug(uuid);
     const send_post = posts.find((post) => post.uuid === uuid)
-    console.log(send_post)
+    console.debug(send_post)
 
     // popupで確認を行い、更新を行う
-    const result = window.confirm("更新しますか？")
+    const result = window.confirm("uuid: " + uuid + "を更新します。")
     if (result) {
-      console.log("更新します")
+      console.debug("更新します", send_post)
       const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&username=' + username
       axios.put(url, send_post)
-        .then((res) => {      
+        .then((res) => {
           setResult(`<b>post id: [ ${res.data.data.uuid} ] の投稿を更新しました。</b>`)
         })
         .catch((err) => {
@@ -94,37 +95,38 @@ function App() {
         })
 
     } else {
-      console.log("更新しません")
+      console.debug("更新しません")
+      setResult(`<b>更新を取りやめました。</b>`)
     }
   }
 
-    // posts:Post[]からuuidで検索してPostを取得する
-    const deletePost = (uuid: String) => {
-      console.debug(uuid);
-  
-      // popupで確認を行い、更新を行う
-      const result = window.confirm("本当に削除しますか？")
-      if (result) {
-        console.debug("削除します")
-        const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&username=' + username + '&uuid=' + uuid
-        axios.delete(url)
-          .then((res) => {      
-            // postsからuuidを持つpostを削除
-            const newPosts = posts.filter((post) => post.uuid !== uuid)
-            setPosts(newPosts)
+  // posts:Post[]からuuidで検索してPostを取得する
+  const deletePost = (uuid: String) => {
+    console.debug(uuid);
 
-            setResult(`<b>post id: [ ${res.data.data.uuid} ] の投稿を削除しました。</b>`)
-          })
-          .catch((err) => {
-            console.error(err)
-            setResult(`<b>エラーが発生しました。もう一度お試しください。<br />${err}</b>`)
-          })
-  
-      } else {
-        setResult(`<b>削除を取りやめました。</b>`)
-      }
+    // popupで確認を行い、更新を行う
+    const result = window.confirm("uuid: " + uuid + "を削除します。")
+    if (result) {
+      console.debug("削除します")
+      const url = import.meta.env.VITE_API_URL + '/api/x/post?token=' + token + '&username=' + username + '&uuid=' + uuid
+      axios.delete(url)
+        .then((res) => {
+          // postsからuuidを持つpostを削除
+          const newPosts = posts.filter((post) => post.uuid !== uuid)
+          setPosts(newPosts)
+          setResult(`<b>post id: [ ${res.data.data} ] の投稿を削除しました。</b>`)
+        })
+        .catch((err) => {
+          console.error(err)
+          setResult(`<b>エラーが発生しました。もう一度お試しください。<br />${err}</b>`)
+        })
+
+    } else {
+      console.debug("削除しません")
+      setResult(`<b>削除を取りやめました。</b>`)
     }
-  
+  }
+
 
   const requestOAuth = async () => {
     const url = import.meta.env.VITE_API_URL + '/api/x/auth/request'
@@ -164,13 +166,16 @@ function App() {
     }
   }
 
-  const registor = async (e: React.FormEvent<HTMLFormElement>) => {
+  const registor = async (e: React.FormEvent<HTMLFormElement>, send_type: string) => {
     e.preventDefault()
 
     console.debug(import.meta.env.VITE_API_URL);
 
 
-    const url = `${import.meta.env.VITE_API_URL}/api/spreadsheet/upload?spreadsheet_id=${e.currentTarget.spreadsheet_id.value}&token=${token}`
+    let url = `${import.meta.env.VITE_API_URL}/api/spreadsheet/upload?spreadsheet_id=${e.currentTarget.spreadsheet_id.value}&token=${token}`
+    if (send_type === "repost") {
+      url = url + "&repost=true"
+    }
     const result = await fetch(url, {
       method: 'GET',
     })
@@ -186,6 +191,7 @@ function App() {
 
       setMsg("")
       setResult("<b>Spreadsheet ID: [ " + data.data.spreadsheet_id + " ] を取得し、Twitter/X Account: [ " + data.data.id + " ] と合致する投稿を登録しました。明日より、自動投稿を行います。</b>")
+      setSpreadsheetIds((rev) => [...rev, data.data.spreadsheet_id])
     }
   }
 
@@ -212,7 +218,7 @@ function App() {
       setPosts(tempPosts)
 
       console.debug(data.code, data.message, data.data)
-      setResult(`<b>Spreadsheet ID: [ ${data.data.spreadsheet_id} ] の投稿を取得しました。</b>`)
+      setResult(`<b>UserID: [ ${username} ] の投稿を取得しました。</b>`)
     }
   }
 
@@ -223,9 +229,18 @@ function App() {
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, index: number, field: string) => {
     const newPosts: Post[] = [...posts];
-    (newPosts[index] as any)[field] = event.target.value;
+
+    // Form値であるString型を数値型に変換
+    if (field === 'priority' || field === 'with_files' || field === 'checked' || field === 'count') {
+      // priorityとwith_files, checked, countフィールドは数値型に変換
+      (newPosts[index] as any)[field] = Number(event.target.value);
+    } else {
+      // その他のフィールドは文字列型のまま
+      (newPosts[index] as any)[field] = event.target.value;
+    }
+
     setPosts(newPosts);
-  }
+  };
 
   // urlからtokenを取得
   useEffect(() => {
@@ -329,9 +344,12 @@ function App() {
                 <dd>認証したTwitter/Xアカウント[ {username} ]と登録したSpreadsheet AccountIDを照合し、Twitter投稿を自動化します。認証したアカウントと登録するアカウントが同様のものであることを確認してください.
                   <div dangerouslySetInnerHTML={{ __html: authAccount() }}></div>
                 </dd>
+                <dt>登録済みのSpreadsheetIDs</dt>
+                {/* 配列を人間にわかりやすい適切な表記で表示 */}
+                <dd>{spreadsheetIds.length == 0 ? "登録無し" : `[${spreadsheetIds.join(", ")}]`}</dd>
               </dl>
 
-              <form onSubmit={(e) => registor(e)}>
+              <form onSubmit={(e) => registor(e, "")}>
                 <input type="text" id="spreadsheet_id" name="spreadsheet_id" onChange={handler} placeholder="Spreadsheet ID" value={msg}></input>
                 <input type="submit" value="登録" />
               </form>
@@ -356,6 +374,7 @@ function App() {
                       <th>File2</th>
                       <th>File3</th>
                       <th>File4</th>
+                      <th>WithFiles</th>
                       <th>Checked</th>
                       <th>Priority</th>
                       <th>Actions</th>
@@ -370,8 +389,9 @@ function App() {
                         <td><input type="text" value={post.file_2} onChange={(e) => handleInputChange(e, index, 'file_2')} /></td>
                         <td><input type="text" value={post.file_3} onChange={(e) => handleInputChange(e, index, 'file_3')} /></td>
                         <td><input type="text" value={post.file_4} onChange={(e) => handleInputChange(e, index, 'file_4')} /></td>
-                        <td><input type="text" value={post.checked} onChange={(e) => handleInputChange(e, index, 'checked')} /></td>
-                        <td><input type="text" value={post.priority} onChange={(e) => handleInputChange(e, index, 'priority')} /></td>
+                        <td><input type="number" value={post.with_files} onChange={(e) => handleInputChange(e, index, 'with_files')} /></td>
+                        <td><input type="number" value={post.checked} onChange={(e) => handleInputChange(e, index, 'checked')} /></td>
+                        <td><input type="number" value={post.priority} onChange={(e) => handleInputChange(e, index, 'priority')} /></td>
                         <td>
                           <button onClick={() => deletePost(post.uuid)} title='削除'>🗑</button>
                           <button onClick={() => putPost(post.uuid)} title='更新'>📝</button>
@@ -400,6 +420,15 @@ function App() {
                   <label htmlFor="priority">Priority:</label>
                   <input type="number" step={1} id="priority" name="priority" placeholder="Priority" />
                   <input className='btn-dl' type="submit" value="Post" />
+                </form>
+              </div>
+
+
+              <div style={{ margin: "3rem auto", paddingBottom: "5rem" }}>
+                <h2>SpreadsheetIDを再登録</h2>
+                <form onSubmit={(e) => registor(e, "repost")}>
+                  <input type="text" id="spreadsheet_id" name="spreadsheet_id" onChange={handler} placeholder="Spreadsheet ID" value={msg}></input>
+                  <input type="submit" value="登録" />
                 </form>
               </div>
             </div>
