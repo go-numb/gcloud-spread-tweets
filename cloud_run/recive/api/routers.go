@@ -80,13 +80,16 @@ func Routers(e *echo.Echo) {
 	)
 
 	apiRouters := e.Group("/api")
+
 	// - GET /api/health: health check
 	apiRouters.GET("/health", client.Health)
-	// - GET /api/data/usage: get usage data
+
+	// - GET /api/data/usage: get usage data, data.users, data.posts
 	apiRouters.GET("/data/usage", client.Usage)
 
 	// - GET /api/upload/: registor update spreadsheet
 	apiRouters.GET("/spreadsheet/upload", client.Registor)
+
 	// Twitter/X callback
 	// for Twitter API AccessToken,Secret
 	apiRouters.GET("/x/auth/request", client.Auth)
@@ -98,6 +101,7 @@ func Routers(e *echo.Echo) {
 
 	// data control
 	apiRouters.GET("/x/accounts", client.GetAccounts)
+
 	// Google cloud schedulesからのトリガーで実行される
 	// Post用データ取得・整形・実行Request
 	apiRouters.GET("/x/posts", client.GetPosts)
