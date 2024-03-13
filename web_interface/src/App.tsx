@@ -6,10 +6,10 @@ import BtnSign from '/public/assets/images/sign-in-with-twitter-gray.png'
 // import BtnSign from './assets/sign-in-with-twitter-gray.png'
 import './App.css'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { Tabs, Button, Layout, Col, Row, Input, Popconfirm, message, Spin } from 'antd';
+import { Tabs, Button, Layout, Col, Row, Input, Checkbox, Popconfirm, message, Spin } from 'antd';
 const { Header, Footer, Content } = Layout;
 const { TextArea } = Input;
-import type { TabsProps } from 'antd';
+import type { TabsProps, CheckboxProps } from 'antd';
 
 import Indicator from './components/data';
 import StepFlow from './components/step';
@@ -289,12 +289,25 @@ function App() {
     const newPosts: Post[] = [...posts];
 
     // Form値であるString型を数値型に変換
-    if (field === 'priority' || field === 'with_files' || field === 'checked' || field === 'count') {
-      // priorityとwith_files, checked, countフィールドは数値型に変換
+    if (field === 'priority' || field === 'count') {
+      // 数値に変換
       (newPosts[index] as any)[field] = Number(event.target.value);
     } else {
       // その他のフィールドは文字列型のまま
       (newPosts[index] as any)[field] = event.target.value;
+    }
+
+    setPosts(newPosts);
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<CheckboxProps>, index: number, field: string) => {
+    const newPosts: Post[] = [...posts];
+
+    // 0/1をbooleanに変換
+    if (e.target.checked) {
+      (newPosts[index] as any)[field] = 1;
+    } else {
+      (newPosts[index] as any)[field] = 0;
     }
 
     setPosts(newPosts);
@@ -460,6 +473,8 @@ function App() {
     {
       key: '6',
       label: '投稿データ操作',
+      // usernameが空でなければ、投稿データ操作を行う
+      disabled: username === "",
       children: (
         <Row>
           <Col>
@@ -500,8 +515,9 @@ function App() {
                       <td><Input type="text" value={post.file_2} onChange={(e) => handleInputChange(e, index, 'file_2')} /></td>
                       <td><Input type="text" value={post.file_3} onChange={(e) => handleInputChange(e, index, 'file_3')} /></td>
                       <td><Input type="text" value={post.file_4} onChange={(e) => handleInputChange(e, index, 'file_4')} /></td>
-                      <td><Input type="number" value={post.with_files} onChange={(e) => handleInputChange(e, index, 'with_files')} /></td>
-                      <td><Input type="number" value={post.checked} onChange={(e) => handleInputChange(e, index, 'checked')} /></td>
+                      {/* 0/1のデータをyes/no表記にする */}
+                      <td><Checkbox value={post.with_files === 1 ? true : false} onChange={(e) => handleCheckboxChange(e, index, "with_files")} /></td>
+                      <td><Checkbox value={post.checked === 1 ? true : false} onChange={(e) => handleCheckboxChange(e, index, "checked")} /></td>
                       <td><Input type="number" value={post.priority} onChange={(e) => handleInputChange(e, index, 'priority')} /></td>
                       <td>
                         <Row>
