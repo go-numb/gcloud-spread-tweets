@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -78,6 +80,11 @@ func Routers(e *echo.Echo) {
 	)
 
 	apiRouters := e.Group("/api")
+	// - GET /api/health: health check
+	apiRouters.GET("/health", client.Health)
+	// - GET /api/data/usage: get usage data
+	apiRouters.GET("/data/usage", client.Usage)
+
 	// - GET /api/upload/: registor update spreadsheet
 	apiRouters.GET("/spreadsheet/upload", client.Registor)
 	// Twitter/X callback
@@ -101,4 +108,37 @@ func Routers(e *echo.Echo) {
 	apiRouters.POST("/x/post", client.CreatePost)   // 新規作成
 	apiRouters.PUT("/x/post", client.PutPost)       // 修正含む更新
 	apiRouters.DELETE("/x/post", client.DeletePost) // 削除
+}
+
+func (p *Client) Health(c echo.Context) error {
+	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "OK", Data: nil})
+}
+
+func (p *Client) Usage(c echo.Context) error {
+	ctx := context.Background()
+	store, err := p.Firestore.NewClient(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	defer store.Close()
+
+	// get accounts
+	docs, err := store.Collection(Accounts).
+		Documents(ctx).GetAll()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	accounts := len(docs)
+
+	docs, err = store.Collection(Posts).
+		Documents(ctx).GetAll()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	// get posts
+	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "OK", Data: echo.Map{
+		"users": accounts,
+		"posts": len(docs),
+	}})
 }
