@@ -6,10 +6,10 @@ import BtnSign from '/public/assets/images/sign-in-with-twitter-gray.png'
 // import BtnSign from './assets/sign-in-with-twitter-gray.png'
 import './App.css'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { Tabs, Button, Layout, Col, Row, Input, Checkbox, Popconfirm, message, Spin } from 'antd';
+import { Tabs, Button, Layout, Col, Row, Input, Checkbox, Popconfirm, Alert, message, Spin } from 'antd';
 const { Header, Footer, Content } = Layout;
 const { TextArea } = Input;
-import type { TabsProps, CheckboxProps } from 'antd';
+import type { TabsProps } from 'antd';
 
 import Indicator from './components/data';
 import StepFlow from './components/step';
@@ -300,7 +300,9 @@ function App() {
     setPosts(newPosts);
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<CheckboxProps>, index: number, field: string) => {
+  const handleCheckboxChange = (ev: any, index: number, field: string) => {
+    const e = ev as React.ChangeEvent<HTMLInputElement>;
+
     const newPosts: Post[] = [...posts];
 
     // 0/1をbooleanに変換
@@ -482,6 +484,9 @@ function App() {
             <p>
               Account ID: [ {username} ] の投稿を取得/表示します。
             </p>
+            <div className='m-2rem'>
+            <Alert message="データソートを実装できます。しかし、その場合データを直接編集することができなくなります。なぜなら、リアルタイムソートであるため動的に値が変わると変化を追えないため" type="info" />
+            </div>
             <Row className='m-2rem'>
               <Col>
                 <Button type='primary' onClick={getPost}>Get posts</Button>
@@ -516,8 +521,8 @@ function App() {
                       <td><Input type="text" value={post.file_3} onChange={(e) => handleInputChange(e, index, 'file_3')} /></td>
                       <td><Input type="text" value={post.file_4} onChange={(e) => handleInputChange(e, index, 'file_4')} /></td>
                       {/* 0/1のデータをyes/no表記にする */}
-                      <td><Checkbox value={post.with_files === 1 ? true : false} onChange={(e) => handleCheckboxChange(e, index, "with_files")} /></td>
-                      <td><Checkbox value={post.checked === 1 ? true : false} onChange={(e) => handleCheckboxChange(e, index, "checked")} /></td>
+                      <td><Checkbox checked={post.with_files == 1 ? true : false} onChange={(e) => handleCheckboxChange(e, index, "with_files")} /></td>
+                      <td><Checkbox checked={post.checked == 1 ? true : false} onChange={(e) => handleCheckboxChange(e, index, "checked")} /></td>
                       <td><Input type="number" value={post.priority} onChange={(e) => handleInputChange(e, index, 'priority')} /></td>
                       <td>
                         <Row>

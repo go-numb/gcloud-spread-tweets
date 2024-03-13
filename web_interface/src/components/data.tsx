@@ -15,16 +15,16 @@ const Indicator: React.FC = () => {
 
     const getData = () => {
         const url = import.meta.env.VITE_API_URL + '/api/data/usage';
-        console.log(url);
+        console.debug(url);
 
         axios.get(url)
             .then(res => {
-                console.log(res.data);
+                console.debug(res.data);
                 setUserN(res.data.data.users);
                 setPostN(res.data.data.posts);
             })
             .catch(error => {
-                console.log(error);
+                console.error(error);
             });
     }
 
