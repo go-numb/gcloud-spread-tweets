@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
-	github.com/go-numb/gcloud-spread-tweets/models v0.0.0-20240305050712-e938c47dda81
+	github.com/go-numb/gcloud-spread-tweets/models v0.0.0-20240313154047-b72826f26b11
 	github.com/go-numb/x-post-to-blue v0.0.0-20240227042059-d5183c803b86
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
@@ -56,9 +56,9 @@ require (
 	gonum.org/v1/gonum v0.14.0 // indirect
 	google.golang.org/api v0.169.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240308144416-29370a3891b7 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240308144416-29370a3891b7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240308144416-29370a3891b7 // indirect
+	google.golang.org/genproto v0.0.0-20240311173647-c811ad7063a7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240311173647-c811ad7063a7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240311173647-c811ad7063a7 // indirect
 	google.golang.org/grpc v1.62.1 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )

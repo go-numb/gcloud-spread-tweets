@@ -22,10 +22,23 @@ type Post struct {
 	*models.Post
 }
 
+func (p *Client) ToDecrypto(account models.Account, post *Post) error {
+	decPassword, err := models.DecryptPassword(account.Password, p.PasswordController)
+	if err != nil {
+		return err
+	}
+	post.AccessToken = account.AccessToken
+	post.AccessSecret = account.AccessSecret
+	post.Password = decPassword
+
+	return nil
+}
+
 func (p *Post) Do() error {
 	if !IsBlue(p.Text) {
 		return p.DoAPI()
 	}
+
 	return p.DoGUI()
 }
 

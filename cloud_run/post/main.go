@@ -93,6 +93,10 @@ func Post(t time.Time) error {
 			return err
 		}
 
+		// 暗号化されたパスワードを復号
+		if err := c.ToDecrypto(accounts[i], post); err != nil {
+			return err
+		}
 		// Post to Twitter/X
 		// Twitter/Xに投稿
 		if err := post.Do(); err != nil {
