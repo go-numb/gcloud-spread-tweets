@@ -9,6 +9,7 @@
   - GET     /x/auth/callback: X AUTH Callback
   - GET     /x/process: TODO 提示実行処理
   - GET     /x/accounts: Accounts取得
+  - PUT     /x/account: Account更新
   - GET     /x/posts: Posts取得
   - POST    /x/posts: Posts登録
   - GET     /x/post: Post取得

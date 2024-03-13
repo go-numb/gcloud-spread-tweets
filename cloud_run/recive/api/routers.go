@@ -102,6 +102,9 @@ func Routers(e *echo.Echo) {
 	// data control
 	apiRouters.GET("/x/accounts", client.GetAccounts)
 
+	// data control: account
+	apiRouters.PUT("/x/account", client.PutAccount)
+
 	// Google cloud schedulesからのトリガーで実行される
 	// Post用データ取得・整形・実行Request
 	apiRouters.GET("/x/posts", client.GetPosts)

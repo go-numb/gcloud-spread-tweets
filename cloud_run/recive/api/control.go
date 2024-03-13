@@ -25,6 +25,36 @@ func (p *Client) GetAccounts(c echo.Context) error {
 	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: accounts})
 }
 
+// PutAccount アカウントを更新
+func (p *Client) PutAccount(c echo.Context) error {
+	token := c.QueryParam("token")
+	username := c.QueryParam("username")
+
+	ctx := context.Background()
+	if err := p.IsUserChecker(ctx, token, username); err != nil {
+		return c.JSON(http.StatusForbidden, err)
+	}
+
+	var account models.Account
+	if err := c.Bind(&account); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid request")
+	}
+
+	store, err := p.Firestore.NewClient(ctx)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
+	}
+	defer store.Close()
+
+	if _, err := store.Collection(Accounts).Doc(username).Update(ctx, []firestore.Update{
+		{Path: "password", Value: account.Password},
+	}); err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error updating firestore, %v", err)})
+	}
+
+	return c.JSON(http.StatusOK, Response{Code: http.StatusOK, Message: "Success", Data: account})
+}
+
 // GetPost Postを取得 query: token, username
 func (p *Client) GetPosts(c echo.Context) error {
 	token := c.QueryParam("token")
