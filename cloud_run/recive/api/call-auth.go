@@ -102,6 +102,19 @@ func (p *Client) Callback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
 	}
 
+	account := models.NewAccount(
+		username,
+		"",
+		claims.AccessToken,
+		claims.AccessSecret).
+		// Default: Free Plan
+		SetSubscribed(models.SubscribedFree).
+		SetTime([]int{17}, []int{0}).
+		SetTerm(48)
+	if err := p.Firestore.Set(ctx, Accounts, account.ID, account); err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting account firestore > %v", err)})
+	}
+
 	log.Debug().Msgf("end callback access token: %s, secret: %s, username: %s", accessToken, accessSecret, username)
 
 	// ページ変異先にリダイレクト

@@ -88,9 +88,7 @@ func (p *Client) Registor(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting posts firestore > %v", err)})
 	}
 
-	// master: x_usersの末尾に追記
 	// Twitter/Xアカウントで認証し、そのアカウントを含むx_postsのデータを登録する
-	// そのため、認証アカウントとx_posts内のアカウントが一致している
 	account := models.NewAccount(
 		customerPosts[0].ID,
 		customerSpreadsheetID,

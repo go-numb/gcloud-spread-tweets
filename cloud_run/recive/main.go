@@ -39,7 +39,7 @@ func main() {
 	if key == "" || secret == "" {
 		log.Fatal().Msg("X KEY, X SECRET is not set, does not load .env")
 	}
-	log.Debug().Msgf("app start, this consumer key: %s\n", strUpsideDown(key))
+	log.Debug().Msgf("app start, this consumer key: %s", strUpsideDown(key))
 
 	e := echo.New()
 
