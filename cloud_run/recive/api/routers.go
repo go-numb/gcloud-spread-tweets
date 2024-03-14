@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,6 +24,8 @@ type Client struct {
 	Secret      string
 	CallbackURL string
 
+	PasswordController []byte
+
 	CredentialFile string
 
 	// SheetID @MasterFile
@@ -42,6 +45,15 @@ func New() *Client {
 
 	projectID := os.Getenv("PROJECTID")
 	filename := filepath.Join(root, os.Getenv("CREDENTIALS"))
+
+	// キーを環境変数から取得 (base64エンコードされている)
+	keystr := os.Getenv("PASSWORDCONTROLLER")
+	// キーをbase64デコード
+	key, err := base64.StdEncoding.DecodeString(keystr)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error decoding key")
+	}
+
 	return &Client{
 		ProjectID:  projectID,
 		GUIURL:     os.Getenv("GUIURL"),
@@ -50,6 +62,8 @@ func New() *Client {
 		Key:         os.Getenv("GOTWI_API_KEY"),
 		Secret:      os.Getenv("GOTWI_API_KEY_SECRET"),
 		CallbackURL: os.Getenv("CALLBACK"),
+
+		PasswordController: key,
 
 		CredentialFile: filename,
 
