@@ -40,14 +40,22 @@ func (p *Client) PutAccount(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "invalid request")
 	}
 
+	fmt.Printf("%+v\n", account)
+
 	store, err := p.Firestore.NewClient(ctx)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error setting firestore, %v", err)})
 	}
 	defer store.Close()
 
+	encPassword, err := models.EncryptPassword(account.Password, p.PasswordController)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error encrypting password, %v", err)})
+	}
+	account.Password = ""
+
 	if _, err := store.Collection(Accounts).Doc(username).Update(ctx, []firestore.Update{
-		{Path: "password", Value: account.Password},
+		{Path: "password", Value: encPassword},
 	}); err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{Code: http.StatusInternalServerError, Message: fmt.Sprintf("Error updating firestore, %v", err)})
 	}
