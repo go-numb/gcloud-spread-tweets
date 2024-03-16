@@ -15,8 +15,8 @@ type Schedule struct {
 	// set weekday
 	DayOfWeek []time.Weekday `csv:"-" dataframe:"day_of_week" firestore:"day_of_week,omitempty" json:"day_of_week,omitempty"`
 
-	Hour   []int `csv:"-" dataframe:"hour" firestore:"hour,omitempty" json:"hour,omitempty"`
-	Minute []int `csv:"-" dataframe:"minute" firestore:"minute,omitempty" json:"minute,omitempty"`
+	Hours   []int `csv:"-" dataframe:"hours" firestore:"hours,omitempty" json:"hours,omitempty"`
+	Minutes []int `csv:"-" dataframe:"minutes" firestore:"minutes,omitempty" json:"minutes,omitempty"`
 }
 
 func (s Schedule) GetIsSchedule(t time.Time) bool {
